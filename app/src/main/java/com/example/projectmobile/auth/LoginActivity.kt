@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.Button
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Snackbar
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,9 +23,9 @@ import androidx.compose.ui.unit.sp
 import com.example.projectmobile.data.AppDatabase
 import com.example.projectmobile.ui.theme.ProjectMobileTheme
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.withContext
 
 class LoginActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,6 +45,9 @@ fun LoginScreen() {
     var password by remember { mutableStateOf("") }
 
     val coroutineScope = rememberCoroutineScope()
+
+    var snackbarVisible by remember { mutableStateOf(false) }
+    var snackbarMessage by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -89,10 +93,14 @@ fun LoginScreen() {
                 if (email.isNotEmpty() && password.isNotEmpty()) {
                     coroutineScope.launch {
                         try {
-                            validateLogin(context, email, password)
+                            validateLogin(context, email, password) { message ->
+                                snackbarMessage = message
+                                snackbarVisible = true
+                            }
                         } catch (e: Exception) {
                             e.printStackTrace()
-                            Toast.makeText(context, "Errore durante il login: ${e.message}", Toast.LENGTH_SHORT).show()
+                            snackbarMessage = "Errore durante il login: ${e.message}"
+                            snackbarVisible = true
                         }
                     }
                 } else {
@@ -103,19 +111,49 @@ fun LoginScreen() {
         ) {
             Text("Login")
         }
+
+        // Show Snackbar for errors
+        LaunchedEffect(snackbarVisible) {
+            if (snackbarVisible) {
+                // Delay to allow the snackbar to fully show before resetting state
+                delay(3000)
+                snackbarVisible = false
+            }
+        }
+
+        if (snackbarVisible) {
+            Snackbar(
+                modifier = Modifier.padding(16.dp),
+                action = {
+                    Button(onClick = { snackbarVisible = false }) {
+                        Text("OK")
+                    }
+                }
+            ) {
+                Text(snackbarMessage)
+            }
+        }
     }
 }
 
-private suspend fun validateLogin(context: android.content.Context, email: String, password: String) {
+private suspend fun validateLogin(
+    context: android.content.Context,
+    email: String,
+    password: String,
+    showErrorSnackbar: (String) -> Unit
+) {
     try {
         val userDao = AppDatabase.getInstance(context).userDao()
+
+        // Retrieve user from the database
         val user = withContext(Dispatchers.IO) {
-            userDao.getUserByEmail(email).firstOrNull()
+            userDao.getUserByEmail(email)
         }
 
+        // Check if user exists and validate password
         withContext(Dispatchers.Main) {
             if (user != null) {
-                // User found, now check password
+                // User found, now validate password
                 if (user.password == password) {
                     // Password matched, proceed to home activity
                     context.startActivity(Intent(context, HomeActivity::class.java))
@@ -123,18 +161,16 @@ private suspend fun validateLogin(context: android.content.Context, email: Strin
                     (context as ComponentActivity).finish()
                 } else {
                     // Password incorrect
-                    Toast.makeText(context, "Password errata.", Toast.LENGTH_SHORT).show()
+                    showErrorSnackbar("Password errata.")
                 }
             } else {
                 // User not found
-                Toast.makeText(context, "Utente non trovato.", Toast.LENGTH_SHORT).show()
+                showErrorSnackbar("Utente non trovato.")
             }
         }
     } catch (e: Exception) {
-        withContext(Dispatchers.Main) {
-            // Exception occurred during database operation
-            Toast.makeText(context, "Errore durante il login: ${e.message}", Toast.LENGTH_SHORT).show()
-        }
+        // Handle exceptions
+        showErrorSnackbar("Errore durante il login: ${e.message}")
         e.printStackTrace()
     }
 }

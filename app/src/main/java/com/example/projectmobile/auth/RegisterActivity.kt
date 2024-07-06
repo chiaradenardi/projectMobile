@@ -1,17 +1,14 @@
 package com.example.projectmobile.auth
 
+
 import android.os.Bundle
-import android.widget.Button
-import android.widget.EditText
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.Button
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,10 +23,6 @@ import com.example.projectmobile.ui.theme.ProjectMobileTheme
 import kotlinx.coroutines.launch
 
 class RegisterActivity : ComponentActivity() {
-    private lateinit var emailEditText: EditText
-    private lateinit var passwordEditText: EditText
-    private lateinit var registerButton: Button
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -43,15 +36,35 @@ class RegisterActivity : ComponentActivity() {
 @Composable
 fun RegisterScreen() {
     val context = LocalContext.current
+    var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val coroutineScope = rememberCoroutineScope()
+
+    var snackbarVisible by remember { mutableStateOf(false) }
+    var snackbarMessage by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier.fillMaxSize().background(Color.White),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        BasicTextField(
+            value = username,
+            onValueChange = { username = it },
+            textStyle = TextStyle(color = Color.Black, fontSize = 18.sp),
+            modifier = Modifier
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+                .fillMaxWidth()
+                .background(Color.White, MaterialTheme.shapes.medium),
+            decorationBox = { innerTextField ->
+                if (username.isEmpty()) {
+                    Text("Username...", style = TextStyle(color = Color.Gray, fontSize = 18.sp))
+                }
+                innerTextField()
+            }
+        )
+        Spacer(modifier = Modifier.height(16.dp))
         BasicTextField(
             value = email,
             onValueChange = { email = it },
@@ -86,28 +99,77 @@ fun RegisterScreen() {
         Spacer(modifier = Modifier.height(16.dp))
         Button(
             onClick = {
-                if (email.isNotEmpty() && password.isNotEmpty()) {
+                if (username.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty()) {
                     coroutineScope.launch {
-                        registerUser(context, email, password)
+                        val result = registerUser(context, username, email, password)
+                        when (result) {
+                            RegistrationResult.Success -> {
+                                Toast.makeText(context, "Registrazione completata.", Toast.LENGTH_SHORT).show()
+                                (context as ComponentActivity).finish() // Finish current activity
+                            }
+                            RegistrationResult.UsernameAlreadyExists -> {
+                                snackbarMessage = "Username già utilizzato."
+                                snackbarVisible = true
+                            }
+                            RegistrationResult.EmailAlreadyExists -> {
+                                snackbarMessage = "Email già utilizzata."
+                                snackbarVisible = true
+                            }
+                            RegistrationResult.Error -> {
+                                snackbarMessage = "Errore durante la registrazione."
+                                snackbarVisible = true
+                            }
+                        }
                     }
                 } else {
-                    Toast.makeText(context, "Inserire email e password.", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Inserire username, email e password.", Toast.LENGTH_SHORT).show()
                 }
             },
             modifier = Modifier.padding(8.dp)
         ) {
             Text("Registrati")
         }
+
+        if (snackbarVisible) {
+            Snackbar(
+                modifier = Modifier.padding(16.dp),
+                action = {
+                    Button(onClick = { snackbarVisible = false }) {
+                        Text("OK")
+                    }
+                }
+            ) {
+                Text(snackbarMessage)
+            }
+        }
     }
 }
 
-private suspend fun registerUser(context: android.content.Context, email: String, password: String) {
-    try {
+private enum class RegistrationResult {
+    Success,
+    UsernameAlreadyExists,
+    EmailAlreadyExists,
+    Error
+}
+
+private suspend fun registerUser(context: android.content.Context, username: String, email: String, password: String): RegistrationResult {
+    return try {
         val userDao = AppDatabase.getInstance(context).userDao()
 
-        // For simplicity, you can set default values for firstName, lastName, and username
+        // Check if username already exists
+        val existingUserByUsername = userDao.getUserByUsername(username)
+        if (existingUserByUsername != null) {
+            return RegistrationResult.UsernameAlreadyExists
+        }
+
+        // Check if email already exists
+        val existingUserByEmail = userDao.getUserByEmail(email)
+        if (existingUserByEmail != null) {
+            return RegistrationResult.EmailAlreadyExists
+        }
+
         val user = User(
-            username = "default_username",
+            username = username,
             email = email,
             password = password,
             firstName = "John",   // Example default value
@@ -115,11 +177,9 @@ private suspend fun registerUser(context: android.content.Context, email: String
         )
 
         userDao.insertUser(user)
-        Toast.makeText(context, "Registrazione completata.", Toast.LENGTH_SHORT).show()
-        (context as ComponentActivity).finish() // Finish current activity
+        RegistrationResult.Success
     } catch (e: Exception) {
-        Toast.makeText(context, "Errore durante la registrazione: ${e.message}", Toast.LENGTH_SHORT).show()
         e.printStackTrace()
+        RegistrationResult.Error
     }
 }
-
