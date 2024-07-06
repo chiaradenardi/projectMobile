@@ -156,7 +156,7 @@ private suspend fun validateLogin(
                 // User found, now validate password
                 if (user.password == password) {
                     // Password matched, proceed to home activity
-                    context.startActivity(Intent(context, HomeActivity::class.java))
+                    context.startActivity(Intent(context, MainAppActivity::class.java))
                     // Finish current activity
                     (context as ComponentActivity).finish()
                 } else {

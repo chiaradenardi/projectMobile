@@ -15,22 +15,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ProjectMobile"
         tools:targetApi="31">
-        <activity
-            android:name=".MainActivity"
+        <activity android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.ProjectMobile">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
         <activity android:name=".auth.LoginActivity" />
         <activity android:name=".auth.RegisterActivity" />
-        <activity android:name=".auth.HomeActivity" />
-
-
+        <activity android:name=".auth.MainAppActivity" />
     </application>
 
 </manifest>
