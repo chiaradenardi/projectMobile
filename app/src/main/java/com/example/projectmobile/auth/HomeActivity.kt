@@ -11,10 +11,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import android.content.Intent
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,6 +42,8 @@ class HomeActivity : ComponentActivity() {
 
 @Composable
 fun HomeScreen() {
+    val context = LocalContext.current
+
     Column(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier.weight(1f) // Questo farà sì che occupi tutto lo spazio rimanente
@@ -169,6 +177,9 @@ fun EventListItem(index: Int) {
 
 @Composable
 fun BottomNavigationBar() {
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+
     BottomAppBar(
         backgroundColor = Color.White,
         elevation = 8.dp,
@@ -216,10 +227,11 @@ fun BottomNavigationBar() {
                 label = { Text("Profilo") },
                 selected = false,
                 onClick = {
-                    // Naviga a Profilo
+                    coroutineScope.launch {
+                        context.startActivity(Intent(context, ProfileActivity::class.java))
+                    }
                 }
             )
         }
     }
 }
-
