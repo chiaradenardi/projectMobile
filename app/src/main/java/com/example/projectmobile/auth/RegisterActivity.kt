@@ -173,7 +173,7 @@ private suspend fun registerUser(context: android.content.Context, username: Str
             email = email,
             password = password,
             firstName = "John",   // Example default value
-            lastName = "Doe"      // Example default value
+            lastName = "Doe",      // Example default value
         )
 
         userDao.insertUser(user)

@@ -16,6 +16,5 @@ data class User(
     val firstName: String,
     val lastName: String,
     val bio: String? = null,
-    val profileImage: String? = null,
-    val darkMode: Boolean
+    val profileImage: String? = null
 )
