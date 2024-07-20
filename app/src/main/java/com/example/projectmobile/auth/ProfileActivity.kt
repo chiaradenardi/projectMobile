@@ -1,28 +1,51 @@
 package com.example.projectmobile.auth
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
 fun ProfileScreen() {
+    // Stato per i dettagli del profilo
+    var userName by remember { mutableStateOf(TextFieldValue("NomeUtente")) }
+    var firstName by remember { mutableStateOf("John") }
+    var lastName by remember { mutableStateOf("Doe") }
+    var userEmail by remember { mutableStateOf("email@example.com") }
+    var userPhone by remember { mutableStateOf("+1234567890") }
+    var darkMode by remember { mutableStateOf(false) }
+
     Column(modifier = Modifier.fillMaxSize()) {
         ProfileHeader()
         Spacer(modifier = Modifier.height(16.dp))
-        ProfileDetails()
+        ProfileDetails(
+            userName = userName,
+            onUserNameChange = { userName = it }
+        )
         Spacer(modifier = Modifier.height(16.dp))
-        EditableUserInfo()
+        EditableUserInfo(
+            firstName = firstName,
+            lastName = lastName,
+            userEmail = userEmail,
+            userPhone = userPhone,
+            onFirstNameChange = { firstName = it },
+            onLastNameChange = { lastName = it },
+            onUserEmailChange = { userEmail = it },
+            onUserPhoneChange = { userPhone = it },
+            onDarkModeChange = { darkMode = it }
+        )
     }
 }
 
@@ -54,7 +77,7 @@ fun ProfileHeader() {
 }
 
 @Composable
-fun ProfileDetails() {
+fun ProfileDetails(userName: TextFieldValue, onUserNameChange: (TextFieldValue) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -70,43 +93,59 @@ fun ProfileDetails() {
             // Immagine del profilo
         }
         Spacer(modifier = Modifier.width(16.dp))
-        // Nome utente (da sostituire con il nome reale dell'utente)
-        Text(
-            text = "Nome Utente",
-            style = TextStyle(fontSize = 20.sp)
+        // Nome utente modificabile
+        BasicTextField(
+            value = userName,
+            onValueChange = onUserNameChange,
+            textStyle = TextStyle(fontSize = 20.sp),
+            modifier = Modifier
+                .border(1.dp, Color.Gray, MaterialTheme.shapes.medium)
+                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .background(Color.White, MaterialTheme.shapes.medium)
+                .fillMaxWidth()
         )
     }
 }
 
 @Composable
-fun EditableUserInfo() {
+fun EditableUserInfo(
+    firstName: String,
+    lastName: String,
+    userEmail: String,
+    userPhone: String,
+    onFirstNameChange: (String) -> Unit,
+    onLastNameChange: (String) -> Unit,
+    onUserEmailChange: (String) -> Unit,
+    onUserPhoneChange: (String) -> Unit,
+    onDarkModeChange: (Boolean) -> Unit
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
         item {
-            EditableUserInfoItem(label = "Nome", value = "John")
+            EditableUserInfoItem(label = "Nome", value = firstName, onValueChange = onFirstNameChange)
             Spacer(modifier = Modifier.height(8.dp))
-            EditableUserInfoItem(label = "Cognome", value = "Doe")
+            EditableUserInfoItem(label = "Cognome", value = lastName, onValueChange = onLastNameChange)
             Spacer(modifier = Modifier.height(8.dp))
-            EditableUserInfoItem(label = "Email", value = "john.doe@example.com")
+            EditableUserInfoItem(label = "Email", value = userEmail, onValueChange = onUserEmailChange)
             Spacer(modifier = Modifier.height(8.dp))
-            EditableUserInfoItem(label = "Numero di telefono", value = "+1234567890")
+            EditableUserInfoItem(label = "Numero di telefono", value = userPhone, onValueChange = onUserPhoneChange)
             Spacer(modifier = Modifier.height(8.dp))
-            DarkModeSwitch()
+            DarkModeSwitch(isChecked = false, onCheckedChange = onDarkModeChange)
         }
     }
 }
 
 @Composable
-fun EditableUserInfoItem(label: String, value: String) {
+fun EditableUserInfoItem(label: String, value: String, onValueChange: (String) -> Unit) {
     Column {
         Text(text = label, style = TextStyle(fontSize = 18.sp))
         Spacer(modifier = Modifier.height(4.dp))
-        BasicTextField(
+        TextField(
             value = value,
-            onValueChange = { /* Implementa la modifica del valore */ },
+            onValueChange = onValueChange,
             textStyle = TextStyle(fontSize = 18.sp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -117,15 +156,15 @@ fun EditableUserInfoItem(label: String, value: String) {
 }
 
 @Composable
-fun DarkModeSwitch() {
+fun DarkModeSwitch(isChecked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Text(text = "Tema scuro", style = TextStyle(fontSize = 18.sp))
         Spacer(modifier = Modifier.width(8.dp))
         Switch(
-            checked = false,
-            onCheckedChange = { /* Implementa il cambio tema */ }
+            checked = isChecked,
+            onCheckedChange = onCheckedChange
         )
     }
 }

@@ -11,4 +11,8 @@ object DatabaseProvider {
             instance ?: AppDatabase.getInstance(context).also { instance = it }
         }
     }
+
+    fun getUserDao(context: Context): UserDao {
+        return AppDatabase.getInstance(context).userDao()
+    }
 }
