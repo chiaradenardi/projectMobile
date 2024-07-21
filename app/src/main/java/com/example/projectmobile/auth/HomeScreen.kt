@@ -18,31 +18,24 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.projectmobile.data.HeaderWithBell
 
 @Composable
 fun HomeScreen() {
     Column(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier.weight(1f) // Questo farà sì che occupi tutto lo spazio rimanente
-        ) {
-            TopSearchBar()
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "HOME",
-                style = TextStyle(fontSize = 24.sp),
-                modifier = Modifier.padding(start = 16.dp)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Filtra in base ai tuoi interessi:",
-                style = TextStyle(fontSize = 18.sp),
-                modifier = Modifier.padding(start = 16.dp)
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            FilterRow()
-            Spacer(modifier = Modifier.height(16.dp))
-            EventList()
-        }
+        HeaderWithBell(title = "HOME", onBellClick = {
+            // Implementa l'azione per la campanella
+        })
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Filtra in base ai tuoi interessi:",
+            style = TextStyle(fontSize = 18.sp),
+            modifier = Modifier.padding(start = 16.dp)
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        FilterRow()
+        Spacer(modifier = Modifier.height(16.dp))
+        EventList()
     }
 }
 

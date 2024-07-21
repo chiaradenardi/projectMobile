@@ -12,14 +12,28 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.projectmobile.data.AppDatabase
+import com.example.projectmobile.data.User
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import com.example.projectmobile.data.HeaderWithBell
+
 
 @Composable
 fun ProfileScreen() {
-    // Stato per i dettagli del profilo
+    // Accesso al database
+    val context = LocalContext.current
+    val userDao = AppDatabase.getInstance(context).userDao()
+
+    // Stato dell'utente
+    var user by remember { mutableStateOf<User?>(null) }
     var userName by remember { mutableStateOf(TextFieldValue("NomeUtente")) }
     var firstName by remember { mutableStateOf("John") }
     var lastName by remember { mutableStateOf("Doe") }
@@ -27,25 +41,63 @@ fun ProfileScreen() {
     var userPhone by remember { mutableStateOf("+1234567890") }
     var darkMode by remember { mutableStateOf(false) }
 
+    // Carica l'utente all'avvio
+    LaunchedEffect(Unit) {
+        user = withContext(Dispatchers.IO) {
+            userDao.getUserByUsername("NomeUtente")
+        }
+        user?.let {
+            userName = TextFieldValue(it.username)
+            firstName = it.firstName
+            lastName = it.lastName
+            userEmail = it.email
+            userPhone = it.bio ?: ""
+            darkMode = it.darkMode
+        }
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
-        ProfileHeader()
+        HeaderWithBell(title = "Profilo", onBellClick = {
+            // Implementa l'azione per la campanella qui
+        })
         Spacer(modifier = Modifier.height(16.dp))
-        ProfileDetails(
-            userName = userName,
-            onUserNameChange = { userName = it }
-        )
+        ProfileDetails(userName = userName, onUserNameChange = { userName = it })
         Spacer(modifier = Modifier.height(16.dp))
         EditableUserInfo(
             firstName = firstName,
             lastName = lastName,
             userEmail = userEmail,
             userPhone = userPhone,
+            darkMode = darkMode,  // Passa darkMode come parametro
             onFirstNameChange = { firstName = it },
             onLastNameChange = { lastName = it },
             onUserEmailChange = { userEmail = it },
             onUserPhoneChange = { userPhone = it },
             onDarkModeChange = { darkMode = it }
         )
+        Button(
+            onClick = {
+                // Avvia una coroutine per eseguire l'operazione di aggiornamento
+                CoroutineScope(Dispatchers.IO).launch {
+                    user?.let {
+                        // Aggiorna i dati dell'utente
+                        userDao.updateUser(
+                            it.copy(
+                                username = userName.text,
+                                email = userEmail,
+                                firstName = firstName,
+                                lastName = lastName,
+                                bio = userPhone,
+                                darkMode = darkMode
+                            )
+                        )
+                    }
+                }
+            },
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text("Salva")
+        }
     }
 }
 
@@ -113,6 +165,7 @@ fun EditableUserInfo(
     lastName: String,
     userEmail: String,
     userPhone: String,
+    darkMode: Boolean,  // Aggiungi darkMode come parametro
     onFirstNameChange: (String) -> Unit,
     onLastNameChange: (String) -> Unit,
     onUserEmailChange: (String) -> Unit,
@@ -133,7 +186,7 @@ fun EditableUserInfo(
             Spacer(modifier = Modifier.height(8.dp))
             EditableUserInfoItem(label = "Numero di telefono", value = userPhone, onValueChange = onUserPhoneChange)
             Spacer(modifier = Modifier.height(8.dp))
-            DarkModeSwitch(isChecked = false, onCheckedChange = onDarkModeChange)
+            DarkModeSwitch(isChecked = darkMode, onCheckedChange = onDarkModeChange)
         }
     }
 }

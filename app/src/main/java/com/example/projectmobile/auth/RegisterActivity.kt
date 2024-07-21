@@ -174,7 +174,8 @@ private suspend fun registerUser(context: android.content.Context, username: Str
             password = password,
             firstName = "John",   // Example default value
             lastName = "Doe",      // Example default value
-        )
+            darkMode = false
+            )
 
         userDao.insertUser(user)
         RegistrationResult.Success
