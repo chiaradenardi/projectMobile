@@ -23,11 +23,33 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import com.example.projectmobile.data.HeaderWithBell
+import com.example.projectmobile.utilis.HeaderWithBell
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.example.projectmobile.ui.theme.ProjectMobileTheme
+
+class ProfileActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            ProjectMobileTheme { // Usa il tema dell'app
+                Surface(color = MaterialTheme.colors.background) {
+                    val navController = rememberNavController()
+                    ProfileScreen(navController) // La tua composizione principale
+                }
+            }
+        }
+    }
+}
 
 
 @Composable
-fun ProfileScreen() {
+fun ProfileScreen(navController: NavHostController) {
     // Accesso al database
     val context = LocalContext.current
     val userDao = AppDatabase.getInstance(context).userDao()
@@ -58,7 +80,7 @@ fun ProfileScreen() {
 
     Column(modifier = Modifier.fillMaxSize()) {
         HeaderWithBell(title = "Profilo", onBellClick = {
-            // Implementa l'azione per la campanella qui
+            navController.navigate("notifications")
         })
         Spacer(modifier = Modifier.height(16.dp))
         ProfileDetails(userName = userName, onUserNameChange = { userName = it })

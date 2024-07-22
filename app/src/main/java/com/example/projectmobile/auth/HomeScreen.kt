@@ -15,16 +15,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.projectmobile.data.HeaderWithBell
+import androidx.navigation.NavHostController
+import com.example.projectmobile.utilis.HeaderWithBell
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(navController: NavHostController) {
+    val context = LocalContext.current
     Column(modifier = Modifier.fillMaxSize()) {
         HeaderWithBell(title = "HOME", onBellClick = {
-            // Implementa l'azione per la campanella
+            navController.navigate("notifications")
         })
         Spacer(modifier = Modifier.height(16.dp))
         Text(

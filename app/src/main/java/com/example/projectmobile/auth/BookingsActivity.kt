@@ -3,32 +3,35 @@ package com.example.projectmobile.auth
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import com.example.projectmobile.ui.theme.ProjectMobileTheme
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.projectmobile.data.HeaderWithBell
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Modifier
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
+import com.example.projectmobile.ui.theme.ProjectMobileTheme
+import com.example.projectmobile.utilis.HeaderWithBell
 
 class BookingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             ProjectMobileTheme {
-                BookingsScreen()
+                val navController = rememberNavController()
+                BookingsScreen(navController)
             }
         }
     }
 }
 
 @Composable
-fun BookingsScreen() {
+fun BookingsScreen(navController: NavHostController) {
+    val context = LocalContext.current
+
     Column(modifier = Modifier.fillMaxSize()) {
         HeaderWithBell(title = "Prenotazioni", onBellClick = {
-            // Implementa l'azione per la campanella qui
+            navController.navigate("notifications")
         })
         Spacer(modifier = Modifier.height(16.dp))
         EventList() // Sostituisci con la lista delle prenotazioni

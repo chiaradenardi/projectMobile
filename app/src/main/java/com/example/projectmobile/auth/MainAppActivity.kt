@@ -3,23 +3,14 @@ package com.example.projectmobile.auth
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import androidx.compose.ui.platform.LocalContext
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.*
 import com.example.projectmobile.ui.theme.ProjectMobileTheme
 
 class MainAppActivity : ComponentActivity() {
@@ -36,26 +27,33 @@ class MainAppActivity : ComponentActivity() {
 @Composable
 fun MainAppScreen() {
     val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
     Scaffold(
-        bottomBar = { BottomNavigationBar(navController) }
+        bottomBar = {
+            if (currentRoute != "notifications") { // Nascondi la barra di navigazione per la schermata delle notifiche
+                BottomNavigationBar(navController)
+            }
+        }
     ) { innerPadding ->
         NavHost(
             navController = navController,
             startDestination = "home",
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable("home") { HomeScreen() }
-            composable("profile") { ProfileScreen() }
-            composable("reservations") { BookingsScreen() }
-            composable("cart") { CartScreen() }
-            composable("favorites") { FavoritesScreen() }
+            composable("home") { HomeScreen(navController) }
+            composable("profile") { ProfileScreen(navController) }
+            composable("reservations") { BookingsScreen(navController) }
+            composable("cart") { CartScreen(navController) }
+            composable("favorites") { FavoritesScreen(navController) }
+            composable("notifications") { NotificationsScreen(navController) }
         }
     }
 }
 
 @Composable
 fun BottomNavigationBar(navController: NavHostController) {
-    val context = LocalContext.current
     val items = listOf(
         NavigationItems.Home,
         NavigationItems.Reservations,
@@ -75,11 +73,13 @@ fun BottomNavigationBar(navController: NavHostController) {
                 label = { Text(item.title) },
                 selected = currentRoute == item.route,
                 onClick = {
-                    navController.navigate(item.route) {
-                        launchSingleTop = true
-                        restoreState = true
-                        popUpTo(navController.graph.startDestinationId) {
-                            saveState = true
+                    if (currentRoute != item.route) {
+                        navController.navigate(item.route) {
+                            launchSingleTop = true
+                            restoreState = true
+                            popUpTo(navController.graph.startDestinationId) {
+                                saveState = true
+                            }
                         }
                     }
                 }
