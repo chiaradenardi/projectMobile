@@ -27,20 +27,25 @@ import com.example.projectmobile.utilis.HeaderWithBell
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.projectmobile.ui.theme.ProjectMobileTheme
+import com.example.projectmobile.ui.theme.ThemeViewModel
 
 class ProfileActivity : ComponentActivity() {
+    private val themeViewModel: ThemeViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            ProjectMobileTheme { // Usa il tema dell'app
+            val isDarkTheme by themeViewModel.isDarkTheme.collectAsState()
+            ProjectMobileTheme(darkTheme = isDarkTheme) {
                 Surface(color = MaterialTheme.colors.background) {
                     val navController = rememberNavController()
-                    ProfileScreen(navController) // La tua composizione principale
+                    ProfileScreen(navController, themeViewModel)
                 }
             }
         }
@@ -49,21 +54,18 @@ class ProfileActivity : ComponentActivity() {
 
 
 @Composable
-fun ProfileScreen(navController: NavHostController) {
-    // Accesso al database
+fun ProfileScreen(navController: NavHostController, themeViewModel: ThemeViewModel) {
     val context = LocalContext.current
     val userDao = AppDatabase.getInstance(context).userDao()
 
-    // Stato dell'utente
     var user by remember { mutableStateOf<User?>(null) }
     var userName by remember { mutableStateOf(TextFieldValue("NomeUtente")) }
     var firstName by remember { mutableStateOf("John") }
     var lastName by remember { mutableStateOf("Doe") }
     var userEmail by remember { mutableStateOf("email@example.com") }
     var userPhone by remember { mutableStateOf("+1234567890") }
-    var darkMode by remember { mutableStateOf(false) }
+    val darkMode by themeViewModel.isDarkTheme.collectAsState()
 
-    // Carica l'utente all'avvio
     LaunchedEffect(Unit) {
         user = withContext(Dispatchers.IO) {
             userDao.getUserByUsername("NomeUtente")
@@ -74,7 +76,7 @@ fun ProfileScreen(navController: NavHostController) {
             lastName = it.lastName
             userEmail = it.email
             userPhone = it.bio ?: ""
-            darkMode = it.darkMode
+            themeViewModel.updateDarkTheme(it.darkMode)
         }
     }
 
@@ -90,19 +92,19 @@ fun ProfileScreen(navController: NavHostController) {
             lastName = lastName,
             userEmail = userEmail,
             userPhone = userPhone,
-            darkMode = darkMode,  // Passa darkMode come parametro
+            darkMode = darkMode,
             onFirstNameChange = { firstName = it },
             onLastNameChange = { lastName = it },
             onUserEmailChange = { userEmail = it },
             onUserPhoneChange = { userPhone = it },
-            onDarkModeChange = { darkMode = it }
+            onDarkModeChange = {
+                themeViewModel.updateDarkTheme(it)
+            }
         )
         Button(
             onClick = {
-                // Avvia una coroutine per eseguire l'operazione di aggiornamento
                 CoroutineScope(Dispatchers.IO).launch {
                     user?.let {
-                        // Aggiorna i dati dell'utente
                         userDao.updateUser(
                             it.copy(
                                 username = userName.text,
@@ -155,27 +157,27 @@ fun ProfileDetails(userName: TextFieldValue, onUserNameChange: (TextFieldValue) 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Immagine del profilo (da sostituire con l'immagine reale dell'utente)
+        // Immagine del profilo
         Box(
             modifier = Modifier
                 .size(80.dp)
-                .background(Color.Gray)
+                .background(MaterialTheme.colors.onBackground.copy(alpha = 0.2f))
         ) {
-            // Immagine del profilo
+            // Sostituire con l'immagine reale dell'utente
         }
         Spacer(modifier = Modifier.width(16.dp))
         // Nome utente modificabile
         BasicTextField(
             value = userName,
             onValueChange = onUserNameChange,
-            textStyle = TextStyle(fontSize = 20.sp),
+            textStyle = TextStyle(fontSize = 20.sp, color = MaterialTheme.colors.onBackground),
             modifier = Modifier
-                .border(1.dp, Color.Gray, MaterialTheme.shapes.medium)
+                .border(1.dp, MaterialTheme.colors.onSurface, MaterialTheme.shapes.medium)
                 .padding(horizontal = 16.dp, vertical = 12.dp)
-                .background(Color.White, MaterialTheme.shapes.medium)
+                .background(MaterialTheme.colors.surface, MaterialTheme.shapes.medium)
                 .fillMaxWidth()
         )
     }
@@ -187,7 +189,7 @@ fun EditableUserInfo(
     lastName: String,
     userEmail: String,
     userPhone: String,
-    darkMode: Boolean,  // Aggiungi darkMode come parametro
+    darkMode: Boolean,
     onFirstNameChange: (String) -> Unit,
     onLastNameChange: (String) -> Unit,
     onUserEmailChange: (String) -> Unit,
@@ -197,7 +199,7 @@ fun EditableUserInfo(
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         item {
             EditableUserInfoItem(label = "Nome", value = firstName, onValueChange = onFirstNameChange)
@@ -216,16 +218,15 @@ fun EditableUserInfo(
 @Composable
 fun EditableUserInfoItem(label: String, value: String, onValueChange: (String) -> Unit) {
     Column {
-        Text(text = label, style = TextStyle(fontSize = 18.sp))
+        Text(text = label, style = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onBackground))
         Spacer(modifier = Modifier.height(4.dp))
         TextField(
             value = value,
             onValueChange = onValueChange,
-            textStyle = TextStyle(fontSize = 18.sp),
+            textStyle = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onBackground),
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color.White, MaterialTheme.shapes.medium)
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .background(MaterialTheme.colors.surface, MaterialTheme.shapes.medium)
         )
     }
 }
@@ -233,13 +234,18 @@ fun EditableUserInfoItem(label: String, value: String, onValueChange: (String) -
 @Composable
 fun DarkModeSwitch(isChecked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 8.dp)
     ) {
-        Text(text = "Tema scuro", style = TextStyle(fontSize = 18.sp))
+        Text(text = "Tema scuro", style = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onBackground))
         Spacer(modifier = Modifier.width(8.dp))
         Switch(
             checked = isChecked,
-            onCheckedChange = onCheckedChange
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = MaterialTheme.colors.secondary,
+                uncheckedThumbColor = MaterialTheme.colors.onSurface
+            )
         )
     }
 }
