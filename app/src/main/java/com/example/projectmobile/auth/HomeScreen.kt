@@ -9,9 +9,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,11 +18,20 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import com.example.projectmobile.data.Activity
 import com.example.projectmobile.utilis.HeaderWithBell
+import com.example.projectmobile.viewmodels.ActivityViewModel
+import com.example.projectmobile.viewmodels.ActivityViewModelFactory
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
     val context = LocalContext.current
+    val activityViewModel: ActivityViewModel = viewModel(
+        factory = ActivityViewModelFactory(context)
+    )
+    val activities by activityViewModel.activities.collectAsState()
+
     Column(modifier = Modifier.fillMaxSize()) {
         HeaderWithBell(title = "HOME", onBellClick = {
             navController.navigate("notifications")
@@ -38,7 +45,7 @@ fun HomeScreen(navController: NavHostController) {
         Spacer(modifier = Modifier.height(16.dp))
         FilterRow()
         Spacer(modifier = Modifier.height(16.dp))
-        EventList()
+        EventList(activities)
     }
 }
 
@@ -111,20 +118,20 @@ fun FilterButton(text: String) {
 }
 
 @Composable
-fun EventList() {
+fun EventList(activities: List<Activity>) {
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
     ) {
-        items(10) { index ->
-            EventListItem(index)
+        items(activities) { activity ->
+            EventListItem(activity)
         }
     }
 }
 
 @Composable
-fun EventListItem(index: Int) {
+fun EventListItem(activity: Activity) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -135,12 +142,17 @@ fun EventListItem(index: Int) {
             modifier = Modifier.padding(16.dp)
         ) {
             Text(
-                text = "Nome Evento $index",
+                text = activity.name,
                 style = TextStyle(fontSize = 18.sp, color = Color.Black)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
-                text = "Descrizione breve dell'evento $index",
+                text = activity.description,
+                style = TextStyle(fontSize = 14.sp, color = Color.Gray)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Prezzo: €${activity.price}",
                 style = TextStyle(fontSize = 14.sp, color = Color.Gray)
             )
         }

@@ -6,10 +6,13 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
+import kotlin.reflect.KParameter
 
 @Database(
     entities = [User::class, Activity::class, Booking::class, Favorite::class, Cart::class],
-    version = 4,  // Incrementa la versione del database a 4
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -32,7 +35,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)  // Aggiungi tutte le migrazioni necessarie
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
                     .build()
                 INSTANCE = instance
                 instance
@@ -40,6 +43,22 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 }
+
+
+        suspend fun populateDatabase(activityDao: ActivityDao) {
+            // Elimina tutto il contenuto
+            activityDao.deleteAll()
+
+            // Aggiungi le attività predefinite
+            val activities = listOf(
+                Activity(name = "Visita al Museo", description = "Una visita guidata al museo", price = 10.0, date = System.currentTimeMillis(), imageUrl = "url_immagine_1"),
+                Activity(name = "Degustazione di Vini", description = "Degustazione di vini locali", price = 20.0, date = System.currentTimeMillis(), imageUrl = "url_immagine_2"),
+                // Aggiungi altre attività
+            )
+            activities.forEach { activityDao.insertActivity(it) }
+        }
+
+
 
 // Migrazione dalla versione 1 alla versione 2
 val MIGRATION_1_2 = object : Migration(1, 2) {

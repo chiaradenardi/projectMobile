@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.*
@@ -17,6 +16,7 @@ import com.example.projectmobile.ui.theme.ThemeViewModel
 
 class MainAppActivity : ComponentActivity() {
     private val themeViewModel: ThemeViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -35,7 +35,7 @@ class MainAppActivity : ComponentActivity() {
 
         Scaffold(
             bottomBar = {
-                if (currentRoute != "notifications") { // Nascondi la barra di navigazione per la schermata delle notifiche
+                if (currentRoute != "notifications") {
                     BottomNavigationBar(navController)
                 }
             }

@@ -10,6 +10,11 @@ interface FavoriteDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertFavorite(favorite: Favorite)
 
-    @Query("SELECT * FROM favorites WHERE username = :username")
-    suspend fun getUserFavorites(username: String): List<Favorite>
+    @Query("""
+        SELECT activity.* FROM favorites
+        INNER JOIN activities AS activity ON favorites.activityId = activity.id
+        WHERE favorites.username = :username
+    """)
+    suspend fun getUserFavoriteActivities(username: String): List<Activity>
 }
+

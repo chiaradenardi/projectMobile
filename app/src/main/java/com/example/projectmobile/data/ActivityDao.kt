@@ -14,5 +14,7 @@ interface ActivityDao {
 
     @Query("SELECT * FROM activities")
     suspend fun getAllActivities(): List<Activity>
-}
 
+    @Query("DELETE FROM activities")
+    suspend fun deleteAll()
+}

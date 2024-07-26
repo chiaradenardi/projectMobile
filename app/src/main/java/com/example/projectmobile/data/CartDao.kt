@@ -12,4 +12,11 @@ interface CartDao {
 
     @Query("SELECT * FROM cart WHERE username = :username")
     suspend fun getUserCart(username: String): List<Cart>
+
+    @Query("""
+        SELECT activities.* FROM cart
+        INNER JOIN activities ON cart.activityId = activities.id
+    """)
+    suspend fun getCartActivities(): List<Activity>
 }
+
