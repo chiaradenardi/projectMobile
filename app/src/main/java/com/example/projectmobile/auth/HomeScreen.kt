@@ -1,6 +1,7 @@
 package com.example.projectmobile.auth
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -45,7 +46,7 @@ fun HomeScreen(navController: NavHostController) {
         Spacer(modifier = Modifier.height(16.dp))
         FilterRow()
         Spacer(modifier = Modifier.height(16.dp))
-        EventList(activities)
+        EventList(navController, activities)
     }
 }
 
@@ -77,7 +78,7 @@ fun TopSearchBar() {
         )
         IconButton(onClick = {
             // Implementa l'apertura della pagina delle notifiche
-            // Esempio: startActivity(Intent(this, NotificationsActivity::class.java))
+            // Example: navController.navigate("notifications")
         }) {
             Icon(
                 imageVector = Icons.Filled.Notifications,
@@ -96,13 +97,12 @@ fun FilterRow() {
             .padding(horizontal = 16.dp)
             .background(Color.White)
             .padding(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        content = {
-            items(items = listOf("Cultura", "Gastronomia", "Natura", "Sport")) { filter ->
-                FilterButton(filter)
-            }
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(listOf("Cultura", "Gastronomia", "Natura", "Sport")) { filter ->
+            FilterButton(filter)
         }
-    )
+    }
 }
 
 @Composable
@@ -118,24 +118,23 @@ fun FilterButton(text: String) {
 }
 
 @Composable
-fun EventList(activities: List<Activity>) {
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-    ) {
+fun EventList(navController: NavHostController, activities: List<Activity>) {
+    LazyColumn {
         items(activities) { activity ->
-            EventListItem(activity)
+            EventListItem(navController, activity)
         }
     }
 }
 
 @Composable
-fun EventListItem(activity: Activity) {
+fun EventListItem(navController: NavHostController, activity: Activity) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 16.dp),
+            .padding(vertical = 8.dp, horizontal = 16.dp)
+            .clickable {
+                navController.navigate("activity_detail/${activity.id}")
+            },
         elevation = 4.dp
     ) {
         Column(

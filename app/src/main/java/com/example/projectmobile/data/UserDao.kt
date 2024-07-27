@@ -20,4 +20,7 @@ interface UserDao {
 
     @Update
     suspend fun updateUser(user: User)
+
+    @Query("SELECT id FROM User WHERE username = :username")
+    suspend fun getUserId(username: String): Long?
 }

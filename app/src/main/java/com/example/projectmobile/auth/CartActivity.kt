@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.example.projectmobile.ui.theme.ProjectMobileTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -63,7 +65,11 @@ fun CartScreen(navController: NavHostController) {
         } else if (error != null) {
             Text("Errore: $error", color = Color.Red, modifier = Modifier.align(Alignment.CenterHorizontally))
         } else {
-            EventList(cartActivities) // Passa la lista delle attività del carrello a EventList
+            LazyColumn {
+                items(cartActivities) { activity ->
+                    // Mostra l'attività
+                }
+            }
         }
     }
 }

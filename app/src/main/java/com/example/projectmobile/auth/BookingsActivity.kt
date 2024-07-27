@@ -63,7 +63,7 @@ fun BookingsScreen(navController: NavHostController) {
         } else if (error != null) {
             Text("Errore: $error", color = Color.Red, modifier = Modifier.align(Alignment.CenterHorizontally))
         } else {
-            EventList(bookings) // Passa la lista di prenotazioni all'EventList
+             // Passa la lista di prenotazioni all'EventList
         }
     }
 }

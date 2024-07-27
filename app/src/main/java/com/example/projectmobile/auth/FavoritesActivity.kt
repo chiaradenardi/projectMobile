@@ -5,6 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import com.example.projectmobile.ui.theme.ProjectMobileTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -41,17 +43,17 @@ fun FavoritesScreen(navController: NavHostController) {
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(true) {
+    /*LaunchedEffect(true) {
         try {
             favoriteActivities = withContext(Dispatchers.IO) {
-                database.favoriteDao().getUserFavoriteActivities("username") // Sostituisci "username" con l'username dell'utente attuale
+                database.favoriteDao().getUserFavoriteActivities() // Sostituisci "username" con l'username dell'utente attuale
             }
         } catch (e: Exception) {
             error = e.message
         } finally {
             isLoading = false
         }
-    }
+    }*/
 
     Column(modifier = Modifier.fillMaxSize()) {
         HeaderWithBell(title = "Preferiti", onBellClick = {
@@ -63,7 +65,11 @@ fun FavoritesScreen(navController: NavHostController) {
         } else if (error != null) {
             Text("Errore: $error", color = Color.Red, modifier = Modifier.align(Alignment.CenterHorizontally))
         } else {
-            EventList(favoriteActivities) // Passa la lista delle attività preferite a EventList
+            LazyColumn {
+                items(favoriteActivities) { activity ->
+                    // Mostra l'attività
+                }
+            }
         }
     }
 }

@@ -6,13 +6,25 @@ import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.*
+import androidx.navigation.navArgument
 import com.example.projectmobile.ui.theme.ProjectMobileTheme
 import com.example.projectmobile.ui.theme.ThemeViewModel
+import com.example.projectmobile.viewmodels.ActivityViewModel
+import com.example.projectmobile.viewmodels.ActivityViewModelFactory
 
 class MainAppActivity : ComponentActivity() {
     private val themeViewModel: ThemeViewModel by viewModels()
@@ -35,7 +47,7 @@ class MainAppActivity : ComponentActivity() {
 
         Scaffold(
             bottomBar = {
-                if (currentRoute != "notifications") {
+                if (currentRoute != "activity_detail/{activityId}" && currentRoute != "notifications") {
                     BottomNavigationBar(navController)
                 }
             }
@@ -51,6 +63,16 @@ class MainAppActivity : ComponentActivity() {
                 composable("cart") { CartScreen(navController) }
                 composable("favorites") { FavoritesScreen(navController) }
                 composable("notifications") { NotificationsScreen(navController) }
+                composable(
+                    "activity_detail/{activityId}",
+                    arguments = listOf(navArgument("activityId") { type = NavType.LongType })
+                ) { backStackEntry ->
+                    val activityId = backStackEntry.arguments?.getLong("activityId")
+                    val activityViewModel: ActivityViewModel = viewModel(factory = ActivityViewModelFactory(LocalContext.current))
+                    activityId?.let {
+                        ActivityDetailScreen(navController, it, activityViewModel)
+                    }
+                }
             }
         }
     }
@@ -58,12 +80,13 @@ class MainAppActivity : ComponentActivity() {
     @Composable
     fun BottomNavigationBar(navController: NavHostController) {
         val items = listOf(
-            NavigationItems.Home,
-            NavigationItems.Reservations,
-            NavigationItems.Favorites,
-            NavigationItems.Cart,
-            NavigationItems.Profile
+            NavigationItem("home", Icons.Default.Home, "Home"),
+            NavigationItem("reservations", Icons.Default.List, "Reservations"),
+            NavigationItem("favorites", Icons.Default.Favorite, "Favorites"),
+            NavigationItem("cart", Icons.Default.ShoppingCart, "Cart"),
+            NavigationItem("profile", Icons.Default.Person, "Profile")
         )
+
         BottomNavigation(
             backgroundColor = MaterialTheme.colors.primary,
             contentColor = MaterialTheme.colors.onPrimary,
@@ -76,16 +99,14 @@ class MainAppActivity : ComponentActivity() {
                     icon = { Icon(imageVector = item.icon, contentDescription = item.title) },
                     label = { Text(item.title) },
                     selected = currentRoute == item.route,
-                    selectedContentColor = MaterialTheme.colors.secondary,
-                    unselectedContentColor = MaterialTheme.colors.onPrimary.copy(alpha = 0.4f),
                     onClick = {
                         if (currentRoute != item.route) {
                             navController.navigate(item.route) {
-                                launchSingleTop = true
-                                restoreState = true
                                 popUpTo(navController.graph.startDestinationId) {
                                     saveState = true
                                 }
+                                launchSingleTop = true
+                                restoreState = true
                             }
                         }
                     }
