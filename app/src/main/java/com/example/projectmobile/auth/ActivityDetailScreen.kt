@@ -1,7 +1,10 @@
 package com.example.projectmobile.auth
 
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -21,9 +24,11 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.projectmobile.data.Activity
 import com.example.projectmobile.viewmodels.ActivityViewModel
+import java.util.Date
 
 @Composable
 fun ActivityDetailScreen(navController: NavHostController, activityId: Long, viewModel: ActivityViewModel) {
+    val context = LocalContext.current
     val activity by produceState<Activity?>(initialValue = null, activityId) {
         value = viewModel.getActivityById(activityId)
     }
@@ -55,7 +60,7 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
         ) { paddingValues ->
             Column(modifier = Modifier.padding(paddingValues).padding(16.dp)) {
                 val painter = rememberAsyncImagePainter(
-                    model = ImageRequest.Builder(LocalContext.current)
+                    model = ImageRequest.Builder(context)
                         .data(activity.imageUrl)
                         .crossfade(true)
                         .build()
@@ -94,6 +99,33 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                     style = TextStyle(fontSize = 16.sp, color = Color.Gray),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
+                Text(
+                    text = "Data: ${Date(activity.date).toLocaleString()}",
+                    style = TextStyle(fontSize = 16.sp, color = Color.Gray),
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Mappa
+                val context = LocalContext.current
+                val mapUri = "https://www.openstreetmap.org/?mlat=${activity.latitude}&mlon=${activity.longitude}&zoom=12"
+                Text(
+                    text = "Visualizza sulla mappa",
+                    style = TextStyle(fontSize = 16.sp, color = Color.Blue),
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .clickable {
+                            try {
+                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(mapUri))
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                Log.e("ActivityDetailScreen", "Errore nell'aprire la mappa: ${e.message}")
+                                snackbarMessage = "Errore nell'aprire la mappa"
+                            }
+                        }
+                )
+
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = {

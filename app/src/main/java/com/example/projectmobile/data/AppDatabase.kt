@@ -12,7 +12,7 @@ import kotlin.reflect.KParameter
 
 @Database(
     entities = [User::class, Activity::class, Booking::class, Favorite::class, Cart::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -35,7 +35,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
                     .build()
                 INSTANCE = instance
                 instance
@@ -43,21 +43,6 @@ abstract class AppDatabase : RoomDatabase() {
         }
     }
 }
-
-
-        suspend fun populateDatabase(activityDao: ActivityDao) {
-            // Elimina tutto il contenuto
-            activityDao.deleteAll()
-
-            // Aggiungi le attività predefinite
-            val activities = listOf(
-                Activity(name = "Visita al Museo", description = "Una visita guidata al museo", price = 10.0, date = System.currentTimeMillis(), imageUrl = "url_immagine_1"),
-                Activity(name = "Degustazione di Vini", description = "Degustazione di vini locali", price = 20.0, date = System.currentTimeMillis(), imageUrl = "url_immagine_2"),
-                // Aggiungi altre attività
-            )
-            activities.forEach { activityDao.insertActivity(it) }
-        }
-
 
 
 // Migrazione dalla versione 1 alla versione 2
@@ -107,5 +92,16 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
 
         // Aggiungi l'indice univoco su username
         db.execSQL("CREATE UNIQUE INDEX index_User_username ON User (username)")
+    }
+}
+
+// Migrazione dalla versione 4 alla versione 5
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Aggiungi la colonna 'latitude'
+        db.execSQL("ALTER TABLE activities ADD COLUMN latitude REAL NOT NULL DEFAULT 0.0")
+
+        // Aggiungi la colonna 'longitude'
+        db.execSQL("ALTER TABLE activities ADD COLUMN longitude REAL NOT NULL DEFAULT 0.0")
     }
 }

@@ -10,5 +10,7 @@ data class Activity(
     val description: String,
     val price: Double,
     val date: Long, // Utilizza un timestamp per rappresentare la data
-    val imageUrl: String?
+    val imageUrl: String?,
+    val latitude: Double, // Latitudine per la mappa
+    val longitude: Double // Longitudine per la mappa
 )
