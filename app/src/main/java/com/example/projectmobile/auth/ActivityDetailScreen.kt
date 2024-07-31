@@ -33,7 +33,7 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
         value = viewModel.getActivityById(activityId)
     }
     val scaffoldState = rememberScaffoldState()
-    val username = "currentUsername" // Sostituisci con l'username dell'utente attuale
+    val currentUser = AuthManager.currentUser
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
 
     // Monitoraggio dello stato del messaggio Snackbar
@@ -108,7 +108,6 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Mappa
-                val context = LocalContext.current
                 val mapUri = "https://www.openstreetmap.org/?mlat=${activity.latitude}&mlon=${activity.longitude}&zoom=12"
                 Text(
                     text = "Visualizza sulla mappa",
@@ -129,9 +128,7 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                 Spacer(modifier = Modifier.height(16.dp))
                 Button(
                     onClick = {
-                        // Call addToCart with username
-                        viewModel.addToCart(activity, username)
-                        // Trigger snackbar message
+                        viewModel.addToCart(activity, currentUser?.username ?: "")
                         snackbarMessage = "Attività aggiunta al carrello"
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -141,10 +138,13 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = {
-                        // Call addToFavorites with username
-                        viewModel.addToFavorites(activity, username)
-                        // Trigger snackbar message
-                        snackbarMessage = "Attività aggiunta ai preferiti"
+                        viewModel.addToFavorites(activity, currentUser?.username ?: "") { success ->
+                            snackbarMessage = if (success) {
+                                "Attività aggiunta ai preferiti"
+                            } else {
+                                "Errore nell'aggiungere ai preferiti"
+                            }
+                        }
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(backgroundColor = Color.Gray)

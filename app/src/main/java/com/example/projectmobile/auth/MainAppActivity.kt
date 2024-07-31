@@ -21,6 +21,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
+import com.example.projectmobile.data.AppDatabase
 import com.example.projectmobile.ui.theme.ProjectMobileTheme
 import com.example.projectmobile.ui.theme.ThemeViewModel
 import com.example.projectmobile.viewmodels.ActivityViewModel
@@ -44,7 +45,16 @@ class MainAppActivity : ComponentActivity() {
         val navController = rememberNavController()
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
-
+        val context = LocalContext.current
+        val database = AppDatabase.getInstance(context)
+        val activityViewModel: ActivityViewModel = viewModel(
+            factory = ActivityViewModelFactory(
+                context,
+                database.activityDao(),
+                database.userDao(),
+                database.favoriteDao()
+            )
+        )
         Scaffold(
             bottomBar = {
                 if (currentRoute != "activity_detail/{activityId}" && currentRoute != "notifications") {
@@ -61,14 +71,13 @@ class MainAppActivity : ComponentActivity() {
                 composable("profile") { ProfileScreen(navController, themeViewModel) }
                 composable("reservations") { BookingsScreen(navController) }
                 composable("cart") { CartScreen(navController) }
-                composable("favorites") { FavoritesScreen(navController) }
+                composable("favorites") { FavoritesScreen(navController, activityViewModel) }
                 composable("notifications") { NotificationsScreen(navController) }
                 composable(
                     "activity_detail/{activityId}",
                     arguments = listOf(navArgument("activityId") { type = NavType.LongType })
                 ) { backStackEntry ->
                     val activityId = backStackEntry.arguments?.getLong("activityId")
-                    val activityViewModel: ActivityViewModel = viewModel(factory = ActivityViewModelFactory(LocalContext.current))
                     activityId?.let {
                         ActivityDetailScreen(navController, it, activityViewModel)
                     }

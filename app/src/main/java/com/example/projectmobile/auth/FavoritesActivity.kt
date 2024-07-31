@@ -15,13 +15,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.projectmobile.utilis.HeaderWithBell
-import com.example.projectmobile.data.AppDatabase
 import com.example.projectmobile.data.Activity
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
+import com.example.projectmobile.viewmodels.ActivityViewModel
 
 class FavoritesActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -29,31 +28,17 @@ class FavoritesActivity : ComponentActivity() {
         setContent {
             ProjectMobileTheme {
                 val navController = rememberNavController()
-                FavoritesScreen(navController)
+                val activityViewModel: ActivityViewModel = viewModel()
+                FavoritesScreen(navController, activityViewModel)
             }
         }
     }
 }
 
 @Composable
-fun FavoritesScreen(navController: NavHostController) {
-    val context = LocalContext.current
-    val database = AppDatabase.getInstance(context)
-    var favoriteActivities by remember { mutableStateOf<List<Activity>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var error by remember { mutableStateOf<String?>(null) }
-
-    /*LaunchedEffect(true) {
-        try {
-            favoriteActivities = withContext(Dispatchers.IO) {
-                database.favoriteDao().getUserFavoriteActivities() // Sostituisci "username" con l'username dell'utente attuale
-            }
-        } catch (e: Exception) {
-            error = e.message
-        } finally {
-            isLoading = false
-        }
-    }*/
+fun FavoritesScreen(navController: NavHostController, viewModel: ActivityViewModel) {
+    val favoriteActivities by viewModel.favorites.collectAsState()
+    val isLoading = favoriteActivities.isEmpty()
 
     Column(modifier = Modifier.fillMaxSize()) {
         HeaderWithBell(title = "Preferiti", onBellClick = {
@@ -62,12 +47,11 @@ fun FavoritesScreen(navController: NavHostController) {
         Spacer(modifier = Modifier.height(16.dp))
         if (isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-        } else if (error != null) {
-            Text("Errore: $error", color = Color.Red, modifier = Modifier.align(Alignment.CenterHorizontally))
         } else {
             LazyColumn {
                 items(favoriteActivities) { activity ->
                     // Mostra l'attività
+                    Text(activity.name)
                 }
             }
         }

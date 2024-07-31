@@ -1,27 +1,39 @@
 package com.example.projectmobile.viewmodels
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.projectmobile.auth.AuthManager
 import com.example.projectmobile.data.Activity
+import com.example.projectmobile.data.ActivityDao
 import com.example.projectmobile.data.AppDatabase
 import com.example.projectmobile.data.Cart
 import com.example.projectmobile.data.Favorite
+import com.example.projectmobile.data.FavoriteDao
+import com.example.projectmobile.data.UserDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ActivityViewModel(context: Context) : ViewModel() {
+class ActivityViewModel(private val activityDao: ActivityDao, private val userDao: UserDao, private val favoriteDao: FavoriteDao, context: Context) : ViewModel() {
     private val db = AppDatabase.getInstance(context)
     private val _activities = MutableStateFlow<List<Activity>>(emptyList())
     val activities: StateFlow<List<Activity>> = _activities
+
+    private val _favorites = MutableStateFlow<List<Activity>>(emptyList())
+    val favorites: StateFlow<List<Activity>> = _favorites
 
     init {
         viewModelScope.launch {
             addPredefinedActivities()
             _activities.value = db.activityDao().getAllActivities()
+            // Passa il nome utente corrente al ViewModel
+            val currentUser = AuthManager.currentUser
+            val username = currentUser?.username ?: ""
+            _favorites.value = db.favoriteDao().getUserFavoriteActivities(username)
         }
     }
 
@@ -38,14 +50,32 @@ class ActivityViewModel(context: Context) : ViewModel() {
         }
     }
 
-    fun addToFavorites(activity: Activity, username: String) {
+    fun addToFavorites(activity: Activity, username: String, callback: (Boolean) -> Unit) {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                val favoriteItem = Favorite(username = username, activityId = activity.id)
-                db.favoriteDao().insertFavorite(favoriteItem)
+            try {
+                Log.d("ActivityViewModel", "Adding to favorites: ${activity.id} for user: $username")
+                val userExists = userDao.getUserByUsername(username) != null
+                val activityExists = activityDao.getActivityById(activity.id) != null
+
+                if (userExists && activityExists) {
+                    val favorite = Favorite(username = username, activityId = activity.id)
+                    favoriteDao.insertFavorite(favorite)
+
+                    // Ricarica i preferiti dopo l'aggiunta
+                    _favorites.value = db.favoriteDao().getUserFavoriteActivities(username)
+
+                    callback(true)
+                } else {
+                    Log.e("ActivityViewModel", "User or Activity does not exist: userExists=$userExists, activityExists=$activityExists")
+                    callback(false)
+                }
+            } catch (e: Exception) {
+                Log.e("ActivityViewModel", "Error adding to favorites", e)
+                callback(false)
             }
         }
     }
+
 
     private suspend fun addPredefinedActivities() {
         val predefinedActivities = listOf(

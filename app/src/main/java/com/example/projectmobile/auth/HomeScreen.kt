@@ -24,12 +24,19 @@ import com.example.projectmobile.utilis.HeaderWithBell
 import com.example.projectmobile.viewmodels.ActivityViewModel
 import com.example.projectmobile.viewmodels.ActivityViewModelFactory
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.projectmobile.data.AppDatabase
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
     val context = LocalContext.current
+    val database = AppDatabase.getInstance(context)
     val activityViewModel: ActivityViewModel = viewModel(
-        factory = ActivityViewModelFactory(context)
+        factory = ActivityViewModelFactory(
+            context,
+            database.activityDao(),
+            database.userDao(),
+            database.favoriteDao()
+        )
     )
     val activities by activityViewModel.activities.collectAsState()
 

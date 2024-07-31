@@ -7,7 +7,7 @@ import androidx.room.Query
 
 @Dao
 interface FavoriteDao {
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertFavorite(favorite: Favorite)
 
     @Query("""

@@ -2,6 +2,7 @@ package com.example.projectmobile.auth
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -136,6 +137,7 @@ fun LoginScreen() {
     }
 }
 
+// Esempio di impostazione del currentUser dopo un login riuscito
 private suspend fun validateLogin(
     context: android.content.Context,
     email: String,
@@ -144,32 +146,21 @@ private suspend fun validateLogin(
 ) {
     try {
         val userDao = AppDatabase.getInstance(context).userDao()
-
-        // Retrieve user from the database
         val user = withContext(Dispatchers.IO) {
             userDao.getUserByEmail(email)
         }
-
-        // Check if user exists and validate password
+        Log.d("LoginActivity", "Utente recuperato: ${user?.username}")
         withContext(Dispatchers.Main) {
-            if (user != null) {
-                // User found, now validate password
-                if (user.password == password) {
-                    // Password matched, proceed to home activity
-                    context.startActivity(Intent(context, MainAppActivity::class.java))
-                    // Finish current activity
-                    (context as ComponentActivity).finish()
-                } else {
-                    // Password incorrect
-                    showErrorSnackbar("Password errata.")
-                }
+            if (user != null && user.password == password) {
+                // Imposta l'utente corrente
+                AuthManager.currentUser = user
+                context.startActivity(Intent(context, MainAppActivity::class.java))
+                (context as ComponentActivity).finish()
             } else {
-                // User not found
-                showErrorSnackbar("Utente non trovato.")
+                showErrorSnackbar("Email o password errati.")
             }
         }
     } catch (e: Exception) {
-        // Handle exceptions
         showErrorSnackbar("Errore durante il login: ${e.message}")
         e.printStackTrace()
     }
