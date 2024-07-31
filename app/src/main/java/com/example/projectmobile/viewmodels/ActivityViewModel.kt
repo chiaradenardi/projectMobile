@@ -5,20 +5,19 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projectmobile.auth.AuthManager
-import com.example.projectmobile.data.Activity
-import com.example.projectmobile.data.ActivityDao
-import com.example.projectmobile.data.AppDatabase
-import com.example.projectmobile.data.Cart
-import com.example.projectmobile.data.Favorite
-import com.example.projectmobile.data.FavoriteDao
-import com.example.projectmobile.data.UserDao
+import com.example.projectmobile.data.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class ActivityViewModel(private val activityDao: ActivityDao, private val userDao: UserDao, private val favoriteDao: FavoriteDao, context: Context) : ViewModel() {
+class ActivityViewModel(
+    private val activityDao: ActivityDao,
+    private val userDao: UserDao,
+    private val favoriteDao: FavoriteDao,
+    context: Context
+) : ViewModel() {
     private val db = AppDatabase.getInstance(context)
     private val _activities = MutableStateFlow<List<Activity>>(emptyList())
     val activities: StateFlow<List<Activity>> = _activities
@@ -28,9 +27,7 @@ class ActivityViewModel(private val activityDao: ActivityDao, private val userDa
 
     init {
         viewModelScope.launch {
-            addPredefinedActivities()
-            _activities.value = db.activityDao().getAllActivities()
-            // Passa il nome utente corrente al ViewModel
+            loadActivities()
             val currentUser = AuthManager.currentUser
             val username = currentUser?.username ?: ""
             _favorites.value = db.favoriteDao().getUserFavoriteActivities(username)
@@ -39,6 +36,12 @@ class ActivityViewModel(private val activityDao: ActivityDao, private val userDa
 
     suspend fun getActivityById(activityId: Long): Activity? {
         return db.activityDao().getActivityById(activityId)
+    }
+
+    fun loadActivities() {
+        viewModelScope.launch {
+            _activities.value = db.activityDao().getAllActivities()
+        }
     }
 
     fun addToCart(activity: Activity, username: String) {
@@ -53,29 +56,22 @@ class ActivityViewModel(private val activityDao: ActivityDao, private val userDa
     fun addToFavorites(activity: Activity, username: String, callback: (Boolean) -> Unit) {
         viewModelScope.launch {
             try {
-                Log.d("ActivityViewModel", "Adding to favorites: ${activity.id} for user: $username")
                 val userExists = userDao.getUserByUsername(username) != null
                 val activityExists = activityDao.getActivityById(activity.id) != null
 
                 if (userExists && activityExists) {
                     val favorite = Favorite(username = username, activityId = activity.id)
                     favoriteDao.insertFavorite(favorite)
-
-                    // Ricarica i preferiti dopo l'aggiunta
                     _favorites.value = db.favoriteDao().getUserFavoriteActivities(username)
-
                     callback(true)
                 } else {
-                    Log.e("ActivityViewModel", "User or Activity does not exist: userExists=$userExists, activityExists=$activityExists")
                     callback(false)
                 }
             } catch (e: Exception) {
-                Log.e("ActivityViewModel", "Error adding to favorites", e)
                 callback(false)
             }
         }
     }
-
 
     private suspend fun addPredefinedActivities() {
         val predefinedActivities = listOf(
@@ -117,8 +113,13 @@ class ActivityViewModel(private val activityDao: ActivityDao, private val userDa
             )
         )
 
+        val existingActivities = db.activityDao().getAllActivities()
+        val existingActivityNames = existingActivities.map { it.name }
+
         for (activity in predefinedActivities) {
-            db.activityDao().insertActivity(activity)
+            if (activity.name !in existingActivityNames) {
+                db.activityDao().insertActivity(activity)
+            }
         }
     }
 }

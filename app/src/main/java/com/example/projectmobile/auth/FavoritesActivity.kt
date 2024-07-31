@@ -48,12 +48,7 @@ fun FavoritesScreen(navController: NavHostController, viewModel: ActivityViewMod
         if (isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
         } else {
-            LazyColumn {
-                items(favoriteActivities) { activity ->
-                    // Mostra l'attività
-                    Text(activity.name)
-                }
-            }
+            EventList(navController, favoriteActivities)
         }
     }
 }

@@ -18,13 +18,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.projectmobile.data.Activity
+import com.example.projectmobile.data.AppDatabase
 import com.example.projectmobile.utilis.HeaderWithBell
 import com.example.projectmobile.viewmodels.ActivityViewModel
 import com.example.projectmobile.viewmodels.ActivityViewModelFactory
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.projectmobile.data.AppDatabase
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
@@ -38,6 +38,11 @@ fun HomeScreen(navController: NavHostController) {
             database.favoriteDao()
         )
     )
+
+    LaunchedEffect(Unit) {
+        activityViewModel.loadActivities()
+    }
+
     val activities by activityViewModel.activities.collectAsState()
 
     Column(modifier = Modifier.fillMaxSize()) {
@@ -54,6 +59,76 @@ fun HomeScreen(navController: NavHostController) {
         FilterRow()
         Spacer(modifier = Modifier.height(16.dp))
         EventList(navController, activities)
+    }
+}
+
+
+@Composable
+fun EventList(navController: NavHostController, activities: List<Activity>) {
+    LazyColumn {
+        items(activities.take(4)) { activity ->
+            EventListItem(navController, activity)
+        }
+    }
+}
+
+@Composable
+fun EventListItem(navController: NavHostController, activity: Activity) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 16.dp)
+            .clickable {
+                navController.navigate("activity_detail/${activity.id}")
+            },
+        elevation = 4.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = activity.name,
+                style = TextStyle(fontSize = 18.sp, color = Color.Black)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = activity.description,
+                style = TextStyle(fontSize = 14.sp, color = Color.Gray)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Prezzo: €${activity.price}",
+                style = TextStyle(fontSize = 14.sp, color = Color.Gray)
+            )
+        }
+    }
+}
+
+@Composable
+fun FilterRow() {
+    LazyRow(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .background(Color.White)
+            .padding(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(listOf("Cultura", "Gastronomia", "Natura", "Sport")) { filter ->
+            FilterButton(filter)
+        }
+    }
+}
+
+@Composable
+fun FilterButton(text: String) {
+    Button(
+        onClick = {
+            // Implementa il filtro degli eventi
+        },
+        modifier = Modifier.padding(vertical = 8.dp)
+    ) {
+        Text(text)
     }
 }
 
@@ -91,75 +166,6 @@ fun TopSearchBar() {
                 imageVector = Icons.Filled.Notifications,
                 contentDescription = "Notifiche",
                 tint = Color.Black
-            )
-        }
-    }
-}
-
-@Composable
-fun FilterRow() {
-    LazyRow(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)
-            .background(Color.White)
-            .padding(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(listOf("Cultura", "Gastronomia", "Natura", "Sport")) { filter ->
-            FilterButton(filter)
-        }
-    }
-}
-
-@Composable
-fun FilterButton(text: String) {
-    Button(
-        onClick = {
-            // Implementa il filtro degli eventi
-        },
-        modifier = Modifier.padding(vertical = 8.dp)
-    ) {
-        Text(text)
-    }
-}
-
-@Composable
-fun EventList(navController: NavHostController, activities: List<Activity>) {
-    LazyColumn {
-        items(activities) { activity ->
-            EventListItem(navController, activity)
-        }
-    }
-}
-
-@Composable
-fun EventListItem(navController: NavHostController, activity: Activity) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 16.dp)
-            .clickable {
-                navController.navigate("activity_detail/${activity.id}")
-            },
-        elevation = 4.dp
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text(
-                text = activity.name,
-                style = TextStyle(fontSize = 18.sp, color = Color.Black)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = activity.description,
-                style = TextStyle(fontSize = 14.sp, color = Color.Gray)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Prezzo: €${activity.price}",
-                style = TextStyle(fontSize = 14.sp, color = Color.Gray)
             )
         }
     }
