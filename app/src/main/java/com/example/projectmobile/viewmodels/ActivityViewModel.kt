@@ -31,16 +31,22 @@ class ActivityViewModel(
     init {
         viewModelScope.launch {
             addPredefinedActivities()
-            loadActivities()
+            loadAllActivities()
             val currentUser = AuthManager.currentUser
             val username = currentUser?.username ?: ""
             _favorites.value = db.favoriteDao().getUserFavoriteActivities(username)
         }
     }
 
-    fun loadActivitiesByCategory(category: String) {
+    fun filterActivitiesByCategory(category: String) {
         viewModelScope.launch {
-            _activities.value = activityDao.getActivitiesByCategory(category)
+            _activities.value = withContext(Dispatchers.IO) {
+                if (category.isEmpty()) {
+                    activityDao.getAllActivities()
+                } else {
+                    activityDao.getActivitiesByCategory(category)
+                }
+            }
         }
     }
 
@@ -51,9 +57,11 @@ class ActivityViewModel(
     }
 
 
-    fun loadActivities() {
+    fun loadAllActivities() {
         viewModelScope.launch {
-            _activities.value = db.activityDao().getAllActivities()
+            _activities.value = withContext(Dispatchers.IO) {
+                db.activityDao().getAllActivities()
+            }
         }
     }
 

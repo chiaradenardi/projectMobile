@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
@@ -42,6 +43,7 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
     var isFavorite by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
+    val isDarkTheme = isSystemInDarkTheme()  // Check if the current theme is dark
 
     LaunchedEffect(activityId) {
         currentUser?.username?.let { username ->
@@ -61,12 +63,13 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
             scaffoldState = scaffoldState,
             topBar = {
                 TopAppBar(
-                    title = { Text(activity.name) },
+                    title = { Text(activity.name, color = MaterialTheme.colors.onPrimary) },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colors.onPrimary)
                         }
-                    }
+                    },
+                    backgroundColor = MaterialTheme.colors.primary
                 )
             }
         ) { paddingValues ->
@@ -109,22 +112,22 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
 
                 Text(
                     text = activity.name,
-                    style = TextStyle(fontSize = 24.sp, color = Color.Black),
+                    style = TextStyle(fontSize = 24.sp, color = MaterialTheme.colors.onSurface),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 Text(
                     text = activity.description,
-                    style = TextStyle(fontSize = 16.sp, color = Color.Gray),
+                    style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colors.onSurface),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 Text(
                     text = "Prezzo: €${activity.price}",
-                    style = TextStyle(fontSize = 16.sp, color = Color.Gray),
+                    style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colors.onSurface),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 Text(
                     text = "Data: ${Date(activity.date).toLocaleString()}",
-                    style = TextStyle(fontSize = 16.sp, color = Color.Gray),
+                    style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colors.onSurface),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
 
@@ -133,7 +136,7 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
 
                 Text(
                     text = "Feedback gradimento attività:",
-                    style = TextStyle(fontSize = 18.sp, color = Color.Black),
+                    style = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onSurface),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 PieChart(slices = pieData, modifier = Modifier.fillMaxWidth())
@@ -142,14 +145,14 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
 
                 Text(
                     text = "Chiamaci per più informazioni!",
-                    style = TextStyle(fontSize = 18.sp, color = Color.Black),
+                    style = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onSurface),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 Log.d("ActivityDetailScreen", "telefono: ${activity.phoneNumber}")
 
                 Text(
                     text = "Telefono: ${activity.phoneNumber}",
-                    style = TextStyle(fontSize = 16.sp, color = Color.Blue),
+                    style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colors.primary),
                     modifier = Modifier
                         .padding(vertical = 8.dp)
                         .clickable {
@@ -168,7 +171,7 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                 val mapUri = "https://www.openstreetmap.org/?mlat=${activity.latitude}&mlon=${activity.longitude}&zoom=12"
                 Text(
                     text = "Visualizza sulla mappa",
-                    style = TextStyle(fontSize = 16.sp, color = Color.Blue),
+                    style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colors.primary),
                     modifier = Modifier
                         .padding(vertical = 8.dp)
                         .clickable {

@@ -40,7 +40,7 @@ fun HomeScreen(navController: NavHostController) {
     )
 
     LaunchedEffect(Unit) {
-        activityViewModel.loadActivities()
+        activityViewModel.loadAllActivities()
     }
 
     val activities by activityViewModel.activities.collectAsState()
@@ -57,11 +57,15 @@ fun HomeScreen(navController: NavHostController) {
             modifier = Modifier.padding(start = 16.dp)
         )
         Spacer(modifier = Modifier.height(16.dp))
-        FilterRow()
+        FilterRow(selectedCategory) { category ->
+            selectedCategory = category
+            activityViewModel.filterActivitiesByCategory(category ?: "")
+        }
         Spacer(modifier = Modifier.height(16.dp))
         EventList(navController, activities)
     }
 }
+
 
 
 @Composable
@@ -106,28 +110,33 @@ fun EventListItem(navController: NavHostController, activity: Activity) {
 }
 
 @Composable
-fun FilterRow() {
+fun FilterRow(selectedCategory: String?, onCategorySelected: (String) -> Unit) {
     LazyRow(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
-            .background(Color.White)
+            .background(MaterialTheme.colors.background)
             .padding(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(listOf("Cultura", "Gastronomia", "Natura", "Sport")) { filter ->
-            FilterButton(filter)
+        items(listOf("Cultura", "Gastronomia", "Natura", "Sport", "Tutti")) { filter ->
+            FilterButton(filter, selectedCategory) { selected ->
+                onCategorySelected(selected)
+            }
         }
     }
 }
 
 @Composable
-fun FilterButton(text: String) {
+fun FilterButton(text: String, selectedCategory: String?, onCategorySelected: (String) -> Unit) {
     Button(
         onClick = {
-            // Implementa il filtro degli eventi
+            onCategorySelected(if (text == "Tutti") "" else text)
         },
-        modifier = Modifier.padding(vertical = 8.dp)
+        modifier = Modifier.padding(vertical = 8.dp),
+        colors = ButtonDefaults.buttonColors(
+            backgroundColor = if (text == selectedCategory || (text == "Tutti" && selectedCategory.isNullOrEmpty())) Color.Gray else Color.White
+        )
     ) {
         Text(text)
     }
