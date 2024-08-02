@@ -185,16 +185,6 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                         }
                 )
 
-                Spacer(modifier = Modifier.height(16.dp))
-                Button(
-                    onClick = {
-                        viewModel.addToCart(activity, currentUser?.username ?: "")
-                        snackbarMessage = "Attività aggiunta al carrello"
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Aggiungi al Carrello")
-                }
                 Spacer(modifier = Modifier.height(8.dp))
                 Button(
                     onClick = {

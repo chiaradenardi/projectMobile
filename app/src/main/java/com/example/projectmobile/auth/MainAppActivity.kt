@@ -69,8 +69,6 @@ class MainAppActivity : ComponentActivity() {
             ) {
                 composable("home") { HomeScreen(navController) }
                 composable("profile") { ProfileScreen(navController, themeViewModel) }
-                composable("reservations") { BookingsScreen(navController) }
-                composable("cart") { CartScreen(navController) }
                 composable("favorites") { FavoritesScreen(navController, activityViewModel) }
                 composable("notifications") { NotificationsScreen(navController) }
                 composable(
@@ -90,9 +88,7 @@ class MainAppActivity : ComponentActivity() {
     fun BottomNavigationBar(navController: NavHostController) {
         val items = listOf(
             NavigationItem("home", Icons.Default.Home, "Home"),
-            NavigationItem("reservations", Icons.Default.List, "Reservations"),
             NavigationItem("favorites", Icons.Default.Favorite, "Favorites"),
-            NavigationItem("cart", Icons.Default.ShoppingCart, "Cart"),
             NavigationItem("profile", Icons.Default.Person, "Profile")
         )
 

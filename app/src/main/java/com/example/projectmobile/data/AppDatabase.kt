@@ -13,17 +13,15 @@ import kotlinx.coroutines.launch
 import kotlin.reflect.KParameter
 
 @Database(
-    entities = [User::class, Activity::class, Booking::class, Favorite::class, Cart::class],
-    version = 8,
+    entities = [User::class, Activity::class,Favorite::class],
+    version = 9,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun activityDao(): ActivityDao
-    abstract fun bookingDao(): BookingDao
     abstract fun favoriteDao(): FavoriteDao
-    abstract fun cartDao(): CartDao
 
     companion object {
         private const val DATABASE_NAME = "project_mobile_db"
@@ -38,7 +36,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     DATABASE_NAME
                 )
-                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
+                    .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9 )
                     .build()
                 INSTANCE = instance
                 instance
@@ -131,5 +129,13 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
     override fun migrate(db: SupportSQLiteDatabase) {
         // Aggiorna la colonna 'feedback' per avere una lista JSON vuota come valore predefinito
         db.execSQL("UPDATE activities SET feedback = '[]' WHERE feedback = ''")
+    }
+}
+
+val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        // Rimuovi le tabelle Cart e Booking se esistono
+        db.execSQL("DROP TABLE IF EXISTS Cart")
+        db.execSQL("DROP TABLE IF EXISTS Booking")
     }
 }

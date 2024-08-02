@@ -65,14 +65,6 @@ class ActivityViewModel(
         }
     }
 
-    fun addToCart(activity: Activity, username: String) {
-        viewModelScope.launch {
-            withContext(Dispatchers.IO) {
-                val cartItem = Cart(username = username, activityId = activity.id)
-                db.cartDao().insertCartItem(cartItem)
-            }
-        }
-    }
 
     fun addToFavorites(activity: Activity, username: String, callback: (Boolean) -> Unit) {
         viewModelScope.launch {
