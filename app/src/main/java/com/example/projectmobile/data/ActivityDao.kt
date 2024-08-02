@@ -2,11 +2,12 @@ package com.example.projectmobile.data
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 
 @Dao
 interface ActivityDao {
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertActivity(activity: Activity)
 
     @Query("SELECT * FROM activities WHERE id = :id")
@@ -17,4 +18,7 @@ interface ActivityDao {
 
     @Query("DELETE FROM activities")
     suspend fun deleteAll()
+
+    @Query("SELECT * FROM activities WHERE category = :category")
+    fun getActivitiesByCategory(category: String): List<Activity>
 }

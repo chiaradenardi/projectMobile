@@ -2,10 +2,13 @@ package com.example.projectmobile.viewmodels
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.projectmobile.auth.AuthManager
 import com.example.projectmobile.data.*
+import com.example.projectmobile.ui.components.PieSlice
+import com.example.projectmobile.ui.components.toHex
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +30,7 @@ class ActivityViewModel(
 
     init {
         viewModelScope.launch {
+            addPredefinedActivities()
             loadActivities()
             val currentUser = AuthManager.currentUser
             val username = currentUser?.username ?: ""
@@ -34,9 +38,18 @@ class ActivityViewModel(
         }
     }
 
-    suspend fun getActivityById(activityId: Long): Activity? {
-        return db.activityDao().getActivityById(activityId)
+    fun loadActivitiesByCategory(category: String) {
+        viewModelScope.launch {
+            _activities.value = activityDao.getActivitiesByCategory(category)
+        }
     }
+
+    suspend fun getActivityById(activityId: Long): Activity? {
+        val activity = db.activityDao().getActivityById(activityId)
+        Log.d("ActivityViewModel", "Activity loaded: $activity")
+        return activity
+    }
+
 
     fun loadActivities() {
         viewModelScope.launch {
@@ -73,43 +86,84 @@ class ActivityViewModel(
         }
     }
 
+    fun removeFromFavorites(activity: Activity, username: String, callback: (Boolean) -> Unit) {
+        viewModelScope.launch {
+            try {
+                favoriteDao.deleteFavorite(username, activity.id)
+                _favorites.value = db.favoriteDao().getUserFavoriteActivities(username)
+                callback(true)
+            } catch (e: Exception) {
+                callback(false)
+            }
+        }
+    }
+
+    suspend fun isFavorite(activityId: Long, username: String): Boolean {
+        val favoriteActivities = favoriteDao.getUserFavoriteActivities(username)
+        return favoriteActivities.any { it.id == activityId }
+    }
+
     private suspend fun addPredefinedActivities() {
         val predefinedActivities = listOf(
             Activity(
                 name = "Tour della città",
                 description = "Esplora i luoghi storici della città.",
                 price = 50.0,
-                date = 1690848000L, // Esempio di data
+                date = 1690848000L,
                 imageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Tourswilson.jpg/260px-Tourswilson.jpg",
-                latitude = 45.0,  // Esempio di latitudine
-                longitude = 9.0   // Esempio di longitudine
+                latitude = 45.0,
+                longitude = 9.0,
+                category = "Cultura",
+                feedback = listOf(PieSlice("Positive", 50f, Color.Green.toHex())),
+                phoneNumber = "1234567890"
             ),
             Activity(
                 name = "Degustazione di vini",
                 description = "Prova una selezione dei migliori vini locali.",
                 price = 70.0,
-                date = 1692144000L, // Esempio di data
+                date = 1692144000L,
                 imageUrl = "https://www.iltemporitrovato.org/wordpress/wp-content/uploads/Corso-di-Degustazione-Vini-7.jpg",
-                latitude = 44.5,  // Esempio di latitudine
-                longitude = 9.5   // Esempio di longitudine
+                latitude = 44.5,
+                longitude = 9.5,
+                category = "Gastronomia",
+                feedback = listOf(
+                    PieSlice("Sì", 80f, Color.Green.toHex()),
+                    PieSlice("No", 5f, Color.Red.toHex()),
+                    PieSlice("Neutro", 15f, Color.Gray.toHex())
+                ),
+                phoneNumber = "234-567-8901"
             ),
             Activity(
                 name = "Escursione in montagna",
                 description = "Goditi una giornata tra i sentieri di montagna.",
                 price = 30.0,
-                date = 1693526400L, // Esempio di data
-                imageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Montagna_di_Campli%2C_Teramo%2C_Italy%2C_south_slope.jpg/1200px-Montagna_di_Campli%2C_Teramo%2C_Italy%2C_south_slope.jpg?20220519194414",
-                latitude = 46.0,  // Esempio di latitudine
-                longitude = 8.0   // Esempio di longitudine
+                date = 1693526400L,
+                imageUrl = "https://www.iltemporitrovato.org/wordpress/wp-content/uploads/Corso-di-Degustazione-Vini-7.jpg",
+                latitude = 46.0,
+                longitude = 8.0,
+                category = "Natura",
+                feedback = listOf(
+                    PieSlice("Sì", 60f, Color.Green.toHex()),
+                    PieSlice("No", 10f, Color.Red.toHex()),
+                    PieSlice("Neutro", 30f, Color.Gray.toHex())
+                ),
+                phoneNumber = "345-678-9012"
             ),
             Activity(
                 name = "Lezione di cucina",
                 description = "Impara a cucinare piatti tipici con uno chef professionista.",
                 price = 60.0,
-                date = 1694304000L, // Esempio di data
-                imageUrl = "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/Good_Food_Display_-_NCI_Visuals_Online.jpg/1200px-Good_Food_Display_-_NCI_Visuals_Online.jpg?20100603030321",
-                latitude = 45.2,  // Esempio di latitudine
-                longitude = 8.5   // Esempio di longitudine
+                date = 1694304000L,
+                imageUrl = "https://via.placeholder.com/150",
+                latitude = 45.2,
+                longitude = 8.5,
+                category = "Gastronomia",
+                feedback = listOf(
+                    PieSlice("Sì", 75f, Color.Green.toHex()),
+                    PieSlice("No", 10f, Color.Red.toHex()),
+                    PieSlice("Neutro", 15f, Color.Gray.toHex())
+                ),
+                phoneNumber = "456-789-0123"
             )
         )
 
@@ -118,7 +172,10 @@ class ActivityViewModel(
 
         for (activity in predefinedActivities) {
             if (activity.name !in existingActivityNames) {
+                Log.d("ActivityViewModel", "Inserting activity: ${activity.name}")
                 db.activityDao().insertActivity(activity)
+            } else {
+                Log.d("ActivityViewModel", "Activity already exists: ${activity.name}")
             }
         }
     }

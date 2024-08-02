@@ -44,6 +44,7 @@ fun HomeScreen(navController: NavHostController) {
     }
 
     val activities by activityViewModel.activities.collectAsState()
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         HeaderWithBell(title = "HOME", onBellClick = {

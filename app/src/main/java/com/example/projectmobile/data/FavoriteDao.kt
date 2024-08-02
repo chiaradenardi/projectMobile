@@ -16,5 +16,7 @@ interface FavoriteDao {
         WHERE favorites.username = :username
     """)
     suspend fun getUserFavoriteActivities(username: String): List<Activity>
-}
 
+    @Query("DELETE FROM favorites WHERE username = :username AND activityId = :activityId")
+    suspend fun deleteFavorite(username: String, activityId: Long)
+}
