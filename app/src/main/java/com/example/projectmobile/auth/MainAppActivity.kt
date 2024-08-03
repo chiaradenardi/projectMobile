@@ -24,6 +24,7 @@ import androidx.navigation.navArgument
 import com.example.projectmobile.data.AppDatabase
 import com.example.projectmobile.ui.theme.ProjectMobileTheme
 import com.example.projectmobile.ui.theme.ThemeViewModel
+import com.example.projectmobile.utilis.UserPreferences
 import com.example.projectmobile.viewmodels.ActivityViewModel
 import com.example.projectmobile.viewmodels.ActivityViewModelFactory
 
@@ -32,16 +33,17 @@ class MainAppActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Initialize AuthManager here if needed
         setContent {
             val isDarkTheme by themeViewModel.isDarkTheme.collectAsState()
             ProjectMobileTheme(darkTheme = isDarkTheme) {
-                MainAppScreen(themeViewModel)
+                MainAppScreen(themeViewModel, AuthManager) // Pass AuthManager here
             }
         }
     }
 
     @Composable
-    fun MainAppScreen(themeViewModel: ThemeViewModel) {
+    fun MainAppScreen(themeViewModel: ThemeViewModel, authManager: AuthManager) {
         val navController = rememberNavController()
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
@@ -68,7 +70,7 @@ class MainAppActivity : ComponentActivity() {
                 modifier = Modifier.padding(innerPadding)
             ) {
                 composable("home") { HomeScreen(navController) }
-                composable("profile") { ProfileScreen(navController, themeViewModel) }
+                composable("profile") { ProfileScreen(navController, themeViewModel, authManager) } // Pass AuthManager here
                 composable("favorites") { FavoritesScreen(navController, activityViewModel) }
                 composable("notifications") { NotificationsScreen(navController) }
                 composable(
@@ -83,6 +85,8 @@ class MainAppActivity : ComponentActivity() {
             }
         }
     }
+}
+
 
     @Composable
     fun BottomNavigationBar(navController: NavHostController) {
@@ -119,4 +123,4 @@ class MainAppActivity : ComponentActivity() {
             }
         }
     }
-}
+

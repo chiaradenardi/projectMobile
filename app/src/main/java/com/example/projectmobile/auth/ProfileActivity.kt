@@ -1,5 +1,7 @@
 package com.example.projectmobile.auth
 
+import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -25,6 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import com.example.projectmobile.utilis.HeaderWithBell
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -34,6 +37,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.projectmobile.ui.theme.ProjectMobileTheme
 import com.example.projectmobile.ui.theme.ThemeViewModel
+import com.example.projectmobile.utilis.UserPreferences
 
 class ProfileActivity : ComponentActivity() {
     private val themeViewModel: ThemeViewModel by viewModels()
@@ -45,38 +49,50 @@ class ProfileActivity : ComponentActivity() {
             ProjectMobileTheme(darkTheme = isDarkTheme) {
                 Surface(color = MaterialTheme.colors.background) {
                     val navController = rememberNavController()
-                    ProfileScreen(navController, themeViewModel)
+                    ProfileScreen(navController, themeViewModel, AuthManager)
                 }
             }
         }
     }
 }
 
-
 @Composable
-fun ProfileScreen(navController: NavHostController, themeViewModel: ThemeViewModel) {
+fun ProfileScreen(
+    navController: NavHostController,
+    themeViewModel: ThemeViewModel,
+    authManager: AuthManager
+) {
     val context = LocalContext.current
     val userDao = AppDatabase.getInstance(context).userDao()
 
     var user by remember { mutableStateOf<User?>(null) }
-    var userName by remember { mutableStateOf(TextFieldValue("NomeUtente")) }
-    var firstName by remember { mutableStateOf("John") }
-    var lastName by remember { mutableStateOf("Doe") }
-    var userEmail by remember { mutableStateOf("email@example.com") }
-    var userPhone by remember { mutableStateOf("+1234567890") }
+    var userName by remember { mutableStateOf(TextFieldValue("")) }
+    var firstName by remember { mutableStateOf("") }
+    var lastName by remember { mutableStateOf("") }
+    var userEmail by remember { mutableStateOf("") }
+    var userPhone by remember { mutableStateOf("") }
     val darkMode by themeViewModel.isDarkTheme.collectAsState()
 
-    LaunchedEffect(Unit) {
-        user = withContext(Dispatchers.IO) {
-            userDao.getUserByUsername("NomeUtente")
-        }
-        user?.let {
-            userName = TextFieldValue(it.username)
-            firstName = it.firstName
-            lastName = it.lastName
-            userEmail = it.email
-            userPhone = it.bio ?: ""
-            themeViewModel.updateDarkTheme(it.darkMode)
+    val currentUser = authManager.currentUser
+    val loggedInUsername = currentUser?.username
+
+    LaunchedEffect(loggedInUsername) {
+        if (loggedInUsername != null) {
+            Log.d("ProfileScreen", "LaunchedEffect triggered with username: $loggedInUsername")
+            user = withContext(Dispatchers.IO) {
+                userDao.getUserByUsername(loggedInUsername)
+            }
+            Log.d("ProfileScreen", "Fetched user: $user")
+            user?.let {
+                userName = TextFieldValue(it.username)
+                firstName = it.firstName ?: ""
+                lastName = it.lastName ?: ""
+                userEmail = it.email
+                userPhone = it.bio ?: ""
+                themeViewModel.updateDarkTheme(it.darkMode)
+            }
+        } else {
+            Log.d("ProfileScreen", "No logged in user")
         }
     }
 
@@ -124,6 +140,7 @@ fun ProfileScreen(navController: NavHostController, themeViewModel: ThemeViewMod
         }
     }
 }
+
 
 @Composable
 fun ProfileHeader() {

@@ -30,9 +30,7 @@
         <activity android:name=".auth.RegisterActivity" />
         <activity android:name=".auth.MainAppActivity" />
         <activity android:name=".auth.ProfileActivity" />
-        <activity android:name=".auth.BookingsActivity"/>
-        <activity android:name=".auth.CartActivity"/>
-        <activity android:name=".auth.FavoritesActivity"/>
+       <activity android:name=".auth.FavoritesActivity"/>
     </application>
 
 </manifest>

@@ -1,6 +1,5 @@
 package com.example.projectmobile.auth
 
-
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -45,7 +44,9 @@ fun RegisterScreen() {
     var snackbarMessage by remember { mutableStateOf("") }
 
     Column(
-        modifier = Modifier.fillMaxSize().background(Color.White),
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -172,10 +173,10 @@ private suspend fun registerUser(context: android.content.Context, username: Str
             username = username,
             email = email,
             password = password,
-            firstName = "John",   // Example default value
-            lastName = "Doe",      // Example default value
+            firstName = "",   // Example default value
+            lastName = "",      // Example default value
             darkMode = false
-            )
+        )
 
         userDao.insertUser(user)
         RegistrationResult.Success
