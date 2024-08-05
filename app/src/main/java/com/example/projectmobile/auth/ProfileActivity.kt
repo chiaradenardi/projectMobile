@@ -1,6 +1,5 @@
 package com.example.projectmobile.auth
 
-import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -8,12 +7,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
@@ -100,8 +96,8 @@ fun ProfileScreen(
             Log.d("ProfileScreen", "Fetched user: $user")
             user?.let {
                 userName = TextFieldValue(it.username)
-                firstName = it.firstName ?: ""
-                lastName = it.lastName ?: ""
+                firstName = it.firstName
+                lastName = it.lastName
                 userEmail = it.email
                 userPhone = it.bio ?: ""
                 themeViewModel.updateDarkTheme(it.darkMode)
@@ -194,40 +190,11 @@ fun ShowProgressBadgeDialog(
     }
 }
 
-
-@Composable
-fun ProfileHeader() {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = "Profilo",
-            style = TextStyle(fontSize = 24.sp),
-            modifier = Modifier.weight(1f)
-        )
-        IconButton(onClick = {
-            // Implementa l'apertura della pagina delle notifiche
-            // Esempio: startActivity(Intent(this, NotificationsActivity::class.java))
-        }) {
-            Icon(
-                imageVector = Icons.Filled.Notifications,
-                contentDescription = "Notifiche",
-                tint = Color.Black
-            )
-        }
-    }
-}
-
 @Composable
 fun ProfileDetails(
     userName: TextFieldValue,
     onUserNameChange: (TextFieldValue) -> Unit
 ) {
-    val context = LocalContext.current
     var profileImageUri by remember { mutableStateOf<Uri?>(null) }
 
     // Launcher for gallery
@@ -243,7 +210,6 @@ fun ProfileDetails(
     var showImageSelectionDialog by remember { mutableStateOf(false) }
     if (showImageSelectionDialog) {
         ShowImageSelectionDialog(
-            context = context,
             galleryLauncher = galleryLauncher,
             onDismiss = { showImageSelectionDialog = false }
         )
@@ -288,7 +254,6 @@ fun ProfileDetails(
 
 @Composable
 fun ShowImageSelectionDialog(
-    context: Context,
     galleryLauncher: ActivityResultLauncher<String>,
     onDismiss: () -> Unit
 ) {

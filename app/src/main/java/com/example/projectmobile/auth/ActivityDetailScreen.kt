@@ -6,14 +6,12 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,7 +28,9 @@ import coil.request.ImageRequest
 import com.example.projectmobile.data.Activity
 import com.example.projectmobile.ui.components.PieChart
 import com.example.projectmobile.viewmodels.ActivityViewModel
-import java.util.Date
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun ActivityDetailScreen(navController: NavHostController, activityId: Long, viewModel: ActivityViewModel) {
@@ -57,12 +57,12 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
         }
     }
 
-    activity?.let { activity ->
+    activity?.let { currentActivity ->
         Scaffold(
             scaffoldState = scaffoldState,
             topBar = {
                 TopAppBar(
-                    title = { Text(activity.name, color = MaterialTheme.colors.onPrimary) },
+                    title = { Text(currentActivity.name, color = MaterialTheme.colors.onPrimary) },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colors.onPrimary)
@@ -80,14 +80,14 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
             ) {
                 val imagePainter = rememberAsyncImagePainter(
                     model = ImageRequest.Builder(context)
-                        .data(activity.imageUrl)
+                        .data(currentActivity.imageUrl)
                         .crossfade(true)
                         .build()
                 )
 
                 when (imagePainter.state) {
                     is AsyncImagePainter.State.Loading -> {
-                        Log.d("ActivityDetailScreen", "Immagine in caricamento per URL: ${activity.imageUrl}")
+                        Log.d("ActivityDetailScreen", "Immagine in caricamento per URL: ${currentActivity.imageUrl}")
                     }
                     is AsyncImagePainter.State.Error -> {
                         val errorState = imagePainter.state as AsyncImagePainter.State.Error
@@ -100,7 +100,7 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
 
                 Image(
                     painter = imagePainter,
-                    contentDescription = activity.name,
+                    contentDescription = currentActivity.name,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
@@ -110,27 +110,31 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                 )
 
                 Text(
-                    text = activity.name,
+                    text = currentActivity.name,
                     style = TextStyle(fontSize = 24.sp, color = MaterialTheme.colors.onSurface),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 Text(
-                    text = activity.description,
+                    text = currentActivity.description,
                     style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colors.onSurface),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 Text(
-                    text = "Prezzo: €${activity.price}",
-                    style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colors.onSurface),
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-                Text(
-                    text = "Data: ${Date(activity.date).toLocaleString()}",
+                    text = "Prezzo: €${currentActivity.price}",
                     style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colors.onSurface),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
 
-                val pieData = activity.feedback
+                // Formattazione della data
+                val dateTimeFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss")
+                val formattedDate = Instant.ofEpochMilli(currentActivity.date).atZone(ZoneId.systemDefault()).toLocalDateTime().format(dateTimeFormatter)
+                Text(
+                    text = "Data: $formattedDate",
+                    style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colors.onSurface),
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                val pieData = currentActivity.feedback
                 Log.d("ActivityDetailScreen", "Feedback data: $pieData")
 
                 Text(
@@ -147,16 +151,16 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                     style = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onSurface),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
-                Log.d("ActivityDetailScreen", "telefono: ${activity.phoneNumber}")
+                Log.d("ActivityDetailScreen", "telefono: ${currentActivity.phoneNumber}")
 
                 Text(
-                    text = "Telefono: ${activity.phoneNumber}",
+                    text = "Telefono: ${currentActivity.phoneNumber}",
                     style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colors.primary),
                     modifier = Modifier
                         .padding(vertical = 8.dp)
                         .clickable {
                             try {
-                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${activity.phoneNumber}"))
+                                val intent = Intent(Intent.ACTION_DIAL, Uri.parse("tel:${currentActivity.phoneNumber}"))
                                 context.startActivity(intent)
                             } catch (e: Exception) {
                                 Log.e("ActivityDetailScreen", "Errore nell'aprire la chiamata: ${e.message}")
@@ -167,7 +171,7 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                val mapUri = "https://www.openstreetmap.org/?mlat=${activity.latitude}&mlon=${activity.longitude}&zoom=12"
+                val mapUri = "https://www.openstreetmap.org/?mlat=${currentActivity.latitude}&mlon=${currentActivity.longitude}&zoom=12"
                 Text(
                     text = "Visualizza sulla mappa",
                     style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colors.primary),
@@ -189,7 +193,7 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                     onClick = {
                         val username = currentUser?.username ?: ""
                         if (isFavorite) {
-                            viewModel.removeFromFavorites(activity, username) { success ->
+                            viewModel.removeFromFavorites(currentActivity, username) { success ->
                                 if (success) {
                                     isFavorite = false
                                     snackbarMessage = "Attività rimossa dai preferiti"
@@ -198,7 +202,7 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                                 }
                             }
                         } else {
-                            viewModel.addToFavorites(activity, username) { success ->
+                            viewModel.addToFavorites(currentActivity, username) { success ->
                                 if (success) {
                                     isFavorite = true
                                     snackbarMessage = "Attività aggiunta ai preferiti"
