@@ -15,12 +15,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
@@ -78,6 +77,7 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                     .padding(16.dp)
                     .verticalScroll(scrollState)
             ) {
+                // Immagine dell'attività
                 val imagePainter = rememberAsyncImagePainter(
                     model = ImageRequest.Builder(context)
                         .data(currentActivity.imageUrl)
@@ -85,43 +85,49 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                         .build()
                 )
 
-                when (imagePainter.state) {
-                    is AsyncImagePainter.State.Loading -> {
-                        Log.d("ActivityDetailScreen", "Immagine in caricamento per URL: ${currentActivity.imageUrl}")
-                    }
-                    is AsyncImagePainter.State.Error -> {
-                        val errorState = imagePainter.state as AsyncImagePainter.State.Error
-                        Log.e("ActivityDetailScreen", "Errore nel caricamento dell'immagine: ${errorState.result.throwable}")
-                    }
-                    else -> {
-                        Log.i("ActivityDetailScreen", "Stato dell'immagine: ${imagePainter.state}")
-                    }
-                }
-
-                Image(
-                    painter = imagePainter,
-                    contentDescription = currentActivity.name,
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(200.dp)
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(MaterialTheme.colors.surface)
                         .padding(8.dp)
-                        .background(Color.Gray),
-                    contentScale = ContentScale.Crop
-                )
+                ) {
+                    Image(
+                        painter = imagePainter,
+                        contentDescription = currentActivity.name,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(Color.Gray),
+                        contentScale = ContentScale.Crop
+                    )
+                    if (imagePainter.state is AsyncImagePainter.State.Loading) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(Color.Black.copy(alpha = 0.5f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator(color = MaterialTheme.colors.primary)
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
                     text = currentActivity.name,
-                    style = TextStyle(fontSize = 24.sp, color = MaterialTheme.colors.onSurface),
+                    style = MaterialTheme.typography.h5.copy(color = MaterialTheme.colors.onSurface),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 Text(
                     text = currentActivity.description,
-                    style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colors.onSurface),
+                    style = MaterialTheme.typography.body1.copy(color = MaterialTheme.colors.onSurface),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 Text(
                     text = "Prezzo: €${currentActivity.price}",
-                    style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colors.onSurface),
+                    style = MaterialTheme.typography.body1.copy(color = MaterialTheme.colors.onSurface),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
 
@@ -130,7 +136,7 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                 val formattedDate = Instant.ofEpochMilli(currentActivity.date).atZone(ZoneId.systemDefault()).toLocalDateTime().format(dateTimeFormatter)
                 Text(
                     text = "Data: $formattedDate",
-                    style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colors.onSurface),
+                    style = MaterialTheme.typography.body1.copy(color = MaterialTheme.colors.onSurface),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
 
@@ -139,7 +145,7 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
 
                 Text(
                     text = "Feedback gradimento attività:",
-                    style = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onSurface),
+                    style = MaterialTheme.typography.h6.copy(color = MaterialTheme.colors.onSurface),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
                 PieChart(slices = pieData, modifier = Modifier.fillMaxWidth())
@@ -148,14 +154,13 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
 
                 Text(
                     text = "Chiamaci per più informazioni!",
-                    style = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onSurface),
+                    style = MaterialTheme.typography.h6.copy(color = MaterialTheme.colors.onSurface),
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
-                Log.d("ActivityDetailScreen", "telefono: ${currentActivity.phoneNumber}")
 
                 Text(
                     text = "Telefono: ${currentActivity.phoneNumber}",
-                    style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colors.primary),
+                    style = MaterialTheme.typography.body1.copy(color = MaterialTheme.colors.primary),
                     modifier = Modifier
                         .padding(vertical = 8.dp)
                         .clickable {
@@ -174,7 +179,7 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                 val mapUri = "https://www.openstreetmap.org/?mlat=${currentActivity.latitude}&mlon=${currentActivity.longitude}&zoom=12"
                 Text(
                     text = "Visualizza sulla mappa",
-                    style = TextStyle(fontSize = 16.sp, color = MaterialTheme.colors.primary),
+                    style = MaterialTheme.typography.body1.copy(color = MaterialTheme.colors.primary),
                     modifier = Modifier
                         .padding(vertical = 8.dp)
                         .clickable {
@@ -213,7 +218,8 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = if (isFavorite) Color.Red else Color.Gray)
+                    colors = ButtonDefaults.buttonColors(backgroundColor = if (isFavorite) Color.Red else Color.Gray),
+                    shape = MaterialTheme.shapes.medium
                 ) {
                     Text(if (isFavorite) "Rimuovi dai Preferiti" else "Aggiungi ai Preferiti")
                 }

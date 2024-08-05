@@ -10,6 +10,7 @@ import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.TextFieldValue
@@ -33,6 +34,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.ui.text.font.FontWeight
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
@@ -113,6 +117,7 @@ fun ProfileScreen(
             Column(modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .background(MaterialTheme.colors.background)
             ) {
                 HeaderWithBell(title = "Profilo", onBellClick = {
                     navController.navigate("notifications")
@@ -153,12 +158,14 @@ fun ProfileScreen(
                             }
                         }
                     },
-                    modifier = Modifier.padding(16.dp)
+                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary),
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
                 ) {
-                    Text("Salva")
+                    Text("Salva", color = Color.White)
                 }
                 if (showBadge) {
-                    // Mostra il badge (può essere un banner, un dialogo o un Snackbar)
                     ShowProgressBadgeDialog(
                         showDialog = showBadge,
                         progressMessage = badgeMessage,
@@ -179,8 +186,8 @@ fun ShowProgressBadgeDialog(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = onDismiss,
-            title = { Text(text = "Congratulazioni!") },
-            text = { Text(text = progressMessage) },
+            title = { Text(text = "Congratulazioni!", style = TextStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold)) },
+            text = { Text(text = progressMessage, style = TextStyle(fontSize = 16.sp)) },
             confirmButton = {
                 Button(onClick = onDismiss) {
                     Text("OK")
@@ -224,10 +231,12 @@ fun ProfileDetails(
         Box(
             modifier = Modifier
                 .size(80.dp)
-                .background(MaterialTheme.colors.onBackground.copy(alpha = 0.2f))
+                .background(MaterialTheme.colors.onSurface.copy(alpha = 0.2f), shape = MaterialTheme.shapes.small)
+                .border(2.dp, MaterialTheme.colors.primary, shape = MaterialTheme.shapes.small)
                 .clickable {
                     showImageSelectionDialog = true
-                }
+                },
+            contentAlignment = Alignment.Center
         ) {
             // Display profile image if available
             profileImageUri?.let {
@@ -236,13 +245,20 @@ fun ProfileDetails(
                     contentDescription = null,
                     modifier = Modifier.size(80.dp)
                 )
+            } ?: run {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Profile Icon",
+                    modifier = Modifier.size(40.dp),
+                    tint = MaterialTheme.colors.onSurface
+                )
             }
         }
         Spacer(modifier = Modifier.width(16.dp))
         BasicTextField(
             value = userName,
             onValueChange = onUserNameChange,
-            textStyle = TextStyle(fontSize = 20.sp, color = MaterialTheme.colors.onBackground),
+            textStyle = TextStyle(fontSize = 20.sp, color = MaterialTheme.colors.onSurface),
             modifier = Modifier
                 .border(1.dp, MaterialTheme.colors.onSurface, MaterialTheme.shapes.medium)
                 .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -259,19 +275,77 @@ fun ShowImageSelectionDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(text = "Choose Image") },
-        buttons = {
+        title = {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Seleziona Immagine",
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colors.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Seleziona Immagine",
+                    style = TextStyle(
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colors.onSurface
+                    )
+                )
+            }
+        },
+        text = {
             Column {
-                Button(onClick = {
-                    galleryLauncher.launch("image/*")
-                    onDismiss()
-                }) {
-                    Text("Choose from Gallery")
+                Text(
+                    text = "Scegli un'immagine dalla tua galleria per aggiornare il profilo.",
+                    style = TextStyle(
+                        fontSize = 16.sp,
+                        color = MaterialTheme.colors.onSurface
+                    ),
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Button(
+                    onClick = {
+                        galleryLauncher.launch("image/*")
+                        onDismiss()
+                    },
+                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp)
+                ) {
+                    Text("Scegli dalla Galleria", color = Color.White)
                 }
             }
-        }
+        },
+        buttons = {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                TextButton(
+                    onClick = onDismiss,
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colors.primary)
+                ) {
+                    Text("Annulla")
+                }
+            }
+        },
+        shape = MaterialTheme.shapes.large,
+        backgroundColor = MaterialTheme.colors.surface,
+        modifier = Modifier
+            .padding(16.dp)
+            .fillMaxWidth()
     )
 }
+
 
 @Composable
 fun EditableUserInfo(
@@ -308,12 +382,12 @@ fun EditableUserInfo(
 @Composable
 fun EditableUserInfoItem(label: String, value: String, onValueChange: (String) -> Unit) {
     Column {
-        Text(text = label, style = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onBackground))
+        Text(text = label, style = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colors.onSurface))
         Spacer(modifier = Modifier.height(4.dp))
         TextField(
             value = value,
             onValueChange = onValueChange,
-            textStyle = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onBackground),
+            textStyle = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onSurface),
             modifier = Modifier
                 .fillMaxWidth()
                 .background(MaterialTheme.colors.surface, MaterialTheme.shapes.medium)
@@ -327,7 +401,7 @@ fun DarkModeSwitch(isChecked: Boolean, onCheckedChange: (Boolean) -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier.padding(vertical = 8.dp)
     ) {
-        Text(text = "Tema scuro", style = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onBackground))
+        Text(text = "Tema scuro", style = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onSurface))
         Spacer(modifier = Modifier.width(8.dp))
         Switch(
             checked = isChecked,

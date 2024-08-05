@@ -9,9 +9,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -82,35 +82,39 @@ fun EventListItem(navController: NavHostController, activity: Activity) {
             .clickable {
                 navController.navigate("activity_detail/${activity.id}")
             },
-        elevation = 4.dp
+        elevation = 4.dp,
+        shape = MaterialTheme.shapes.medium
     ) {
         Column(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier
+                .padding(16.dp)
+                .background(MaterialTheme.colors.surface)
         ) {
             Text(
                 text = activity.name,
-                style = TextStyle(fontSize = 18.sp, color = Color.Black)
+                style = TextStyle(fontSize = 18.sp, color = MaterialTheme.colors.onSurface, fontWeight = FontWeight.Bold)
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = activity.description,
-                style = TextStyle(fontSize = 14.sp, color = Color.Gray)
+                style = TextStyle(fontSize = 14.sp, color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f))
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Prezzo: €${activity.price}",
-                style = TextStyle(fontSize = 14.sp, color = Color.Gray)
+                style = TextStyle(fontSize = 14.sp, color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f))
             )
         }
     }
 }
+
 
 @Composable
 fun FilterRow(selectedCategory: String?, onCategorySelected: (String) -> Unit) {
     LazyRow(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .background(MaterialTheme.colors.background)
             .padding(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -131,9 +135,21 @@ fun FilterButton(text: String, selectedCategory: String?, onCategorySelected: (S
         },
         modifier = Modifier.padding(vertical = 8.dp),
         colors = ButtonDefaults.buttonColors(
-            backgroundColor = if (text == selectedCategory || (text == "Tutti" && selectedCategory.isNullOrEmpty())) Color.Gray else Color.White
+            backgroundColor = if (text == selectedCategory || (text == "Tutti" && selectedCategory.isNullOrEmpty())) {
+                MaterialTheme.colors.primary
+            } else {
+                MaterialTheme.colors.surface
+            },
+            contentColor = if (text == selectedCategory || (text == "Tutti" && selectedCategory.isNullOrEmpty())) {
+                MaterialTheme.colors.onPrimary
+            } else {
+                MaterialTheme.colors.onSurface
+            }
         )
     ) {
         Text(text)
     }
 }
+
+
+
