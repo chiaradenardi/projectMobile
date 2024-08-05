@@ -12,6 +12,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,7 +29,6 @@ import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.example.projectmobile.data.Activity
 import com.example.projectmobile.ui.components.PieChart
-import com.example.projectmobile.ui.components.PieSlice
 import com.example.projectmobile.viewmodels.ActivityViewModel
 import java.util.Date
 
@@ -43,7 +43,6 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
     var snackbarMessage by remember { mutableStateOf<String?>(null) }
     var isFavorite by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
-    val isDarkTheme = isSystemInDarkTheme()  // Check if the current theme is dark
 
     LaunchedEffect(activityId) {
         currentUser?.username?.let { username ->
@@ -66,7 +65,7 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                     title = { Text(activity.name, color = MaterialTheme.colors.onPrimary) },
                     navigationIcon = {
                         IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colors.onPrimary)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaterialTheme.colors.onPrimary)
                         }
                     },
                     backgroundColor = MaterialTheme.colors.primary
@@ -131,7 +130,7 @@ fun ActivityDetailScreen(navController: NavHostController, activityId: Long, vie
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
 
-                val pieData = activity.feedback ?: emptyList()
+                val pieData = activity.feedback
                 Log.d("ActivityDetailScreen", "Feedback data: $pieData")
 
                 Text(

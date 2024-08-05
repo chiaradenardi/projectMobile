@@ -9,9 +9,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -24,7 +22,6 @@ import androidx.navigation.navArgument
 import com.example.projectmobile.data.AppDatabase
 import com.example.projectmobile.ui.theme.ProjectMobileTheme
 import com.example.projectmobile.ui.theme.ThemeViewModel
-import com.example.projectmobile.utilis.UserPreferences
 import com.example.projectmobile.viewmodels.ActivityViewModel
 import com.example.projectmobile.viewmodels.ActivityViewModelFactory
 

@@ -1,4 +1,3 @@
-// File: AuthManager.kt
 package com.example.projectmobile.auth
 
 import com.example.projectmobile.data.User

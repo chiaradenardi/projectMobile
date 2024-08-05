@@ -1,7 +1,6 @@
 package com.example.projectmobile.auth
 
 import android.content.Context
-import android.content.SharedPreferences
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -22,7 +21,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.projectmobile.data.AppDatabase
 import com.example.projectmobile.data.User
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -39,15 +37,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.core.content.FileProvider
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
 import com.example.projectmobile.ui.theme.ProjectMobileTheme
 import com.example.projectmobile.ui.theme.ThemeViewModel
-import com.example.projectmobile.utilis.UserPreferences
-import java.io.File
 
 class ProfileActivity : ComponentActivity() {
     private val themeViewModel: ThemeViewModel by viewModels()
@@ -88,6 +82,14 @@ fun ProfileScreen(
 
     val scaffoldState = rememberScaffoldState()
     val coroutineScope = rememberCoroutineScope()
+    var showBadge by remember { mutableStateOf(false) }
+    var badgeMessage by remember { mutableStateOf("") }
+
+    // Funzione per mostrare il badge
+    fun showProgressBadge() {
+        badgeMessage = "Hai modificato il tuo profilo!"
+        showBadge = true
+    }
 
     LaunchedEffect(loggedInUsername) {
         if (loggedInUsername != null) {
@@ -138,6 +140,7 @@ fun ProfileScreen(
                 )
                 Button(
                     onClick = {
+                        showProgressBadge()
                         coroutineScope.launch {
                             user?.let {
                                 userDao.updateUser(
@@ -158,11 +161,38 @@ fun ProfileScreen(
                 ) {
                     Text("Salva")
                 }
+                if (showBadge) {
+                    // Mostra il badge (può essere un banner, un dialogo o un Snackbar)
+                    ShowProgressBadgeDialog(
+                        showDialog = showBadge,
+                        progressMessage = badgeMessage,
+                        onDismiss = { showBadge = false }
+                    )
+                }
             }
         }
     )
 }
 
+@Composable
+fun ShowProgressBadgeDialog(
+    showDialog: Boolean,
+    progressMessage: String,
+    onDismiss: () -> Unit
+) {
+    if (showDialog) {
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text(text = "Congratulazioni!") },
+            text = { Text(text = progressMessage) },
+            confirmButton = {
+                Button(onClick = onDismiss) {
+                    Text("OK")
+                }
+            }
+        )
+    }
+}
 
 
 @Composable

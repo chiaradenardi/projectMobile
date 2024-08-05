@@ -8,9 +8,7 @@ import androidx.room.TypeConverters
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.projectmobile.utilis.Converters
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
-import kotlin.reflect.KParameter
+
 
 @Database(
     entities = [User::class, Activity::class,Favorite::class],

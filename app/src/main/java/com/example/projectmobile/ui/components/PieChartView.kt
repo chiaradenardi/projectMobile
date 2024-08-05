@@ -10,6 +10,8 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
+import kotlin.math.cos
+import kotlin.math.sin
 
 
 data class PieSlice(val label: String, val value: Float, val color: String)
@@ -52,8 +54,8 @@ fun PieChart(
                 val sweepAngle = (slice.value / total) * 360f
                 val labelAngle = startAngle + sweepAngle / 2
                 val labelText = slice.label
-                val x = (size.width / 2 + (size.width / 4) * Math.cos(Math.toRadians(labelAngle.toDouble()))).toFloat()
-                val y = (size.height / 2 + (size.height / 4) * Math.sin(Math.toRadians(labelAngle.toDouble()))).toFloat()
+                val x = (size.width / 2 + (size.width / 4) * cos(Math.toRadians(labelAngle.toDouble()))).toFloat()
+                val y = (size.height / 2 + (size.height / 4) * sin(Math.toRadians(labelAngle.toDouble()))).toFloat()
                 canvas.nativeCanvas.drawText(labelText, x, y, paint)
                 startAngle += sweepAngle
             }

@@ -59,7 +59,7 @@ fun HomeScreen(navController: NavHostController) {
         Spacer(modifier = Modifier.height(16.dp))
         FilterRow(selectedCategory) { category ->
             selectedCategory = category
-            activityViewModel.filterActivitiesByCategory(category ?: "")
+            activityViewModel.filterActivitiesByCategory(category)
         }
         Spacer(modifier = Modifier.height(16.dp))
         EventList(navController, activities)
