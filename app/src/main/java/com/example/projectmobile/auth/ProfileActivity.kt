@@ -2,6 +2,7 @@ package com.example.projectmobile.auth
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -29,15 +30,24 @@ import com.example.projectmobile.utilis.HeaderWithBell
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.core.content.FileProvider
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberAsyncImagePainter
+import coil.compose.rememberImagePainter
 import com.example.projectmobile.ui.theme.ProjectMobileTheme
 import com.example.projectmobile.ui.theme.ThemeViewModel
 import com.example.projectmobile.utilis.UserPreferences
+import java.io.File
 
 class ProfileActivity : ComponentActivity() {
     private val themeViewModel: ThemeViewModel by viewModels()
@@ -76,6 +86,9 @@ fun ProfileScreen(
     val currentUser = authManager.currentUser
     val loggedInUsername = currentUser?.username
 
+    val scaffoldState = rememberScaffoldState()
+    val coroutineScope = rememberCoroutineScope()
+
     LaunchedEffect(loggedInUsername) {
         if (loggedInUsername != null) {
             Log.d("ProfileScreen", "LaunchedEffect triggered with username: $loggedInUsername")
@@ -96,50 +109,60 @@ fun ProfileScreen(
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        HeaderWithBell(title = "Profilo", onBellClick = {
-            navController.navigate("notifications")
-        })
-        Spacer(modifier = Modifier.height(16.dp))
-        ProfileDetails(userName = userName, onUserNameChange = { userName = it })
-        Spacer(modifier = Modifier.height(16.dp))
-        EditableUserInfo(
-            firstName = firstName,
-            lastName = lastName,
-            userEmail = userEmail,
-            userPhone = userPhone,
-            darkMode = darkMode,
-            onFirstNameChange = { firstName = it },
-            onLastNameChange = { lastName = it },
-            onUserEmailChange = { userEmail = it },
-            onUserPhoneChange = { userPhone = it },
-            onDarkModeChange = {
-                themeViewModel.updateDarkTheme(it)
-            }
-        )
-        Button(
-            onClick = {
-                CoroutineScope(Dispatchers.IO).launch {
-                    user?.let {
-                        userDao.updateUser(
-                            it.copy(
-                                username = userName.text,
-                                email = userEmail,
-                                firstName = firstName,
-                                lastName = lastName,
-                                bio = userPhone,
-                                darkMode = darkMode
-                            )
-                        )
+    Scaffold(
+        scaffoldState = scaffoldState,
+        content = { innerPadding ->
+            Column(modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+            ) {
+                HeaderWithBell(title = "Profilo", onBellClick = {
+                    navController.navigate("notifications")
+                })
+                Spacer(modifier = Modifier.height(16.dp))
+                ProfileDetails(userName = userName, onUserNameChange = { userName = it })
+                Spacer(modifier = Modifier.height(16.dp))
+                EditableUserInfo(
+                    firstName = firstName,
+                    lastName = lastName,
+                    userEmail = userEmail,
+                    userPhone = userPhone,
+                    darkMode = darkMode,
+                    onFirstNameChange = { firstName = it },
+                    onLastNameChange = { lastName = it },
+                    onUserEmailChange = { userEmail = it },
+                    onUserPhoneChange = { userPhone = it },
+                    onDarkModeChange = {
+                        themeViewModel.updateDarkTheme(it)
                     }
+                )
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            user?.let {
+                                userDao.updateUser(
+                                    it.copy(
+                                        username = userName.text,
+                                        email = userEmail,
+                                        firstName = firstName,
+                                        lastName = lastName,
+                                        bio = userPhone,
+                                        darkMode = darkMode
+                                    )
+                                )
+                                scaffoldState.snackbarHostState.showSnackbar("Modifiche salvate con successo")
+                            }
+                        }
+                    },
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Text("Salva")
                 }
-            },
-            modifier = Modifier.padding(16.dp)
-        ) {
-            Text("Salva")
+            }
         }
-    }
+    )
 }
+
 
 
 @Composable
@@ -170,23 +193,56 @@ fun ProfileHeader() {
 }
 
 @Composable
-fun ProfileDetails(userName: TextFieldValue, onUserNameChange: (TextFieldValue) -> Unit) {
+fun ProfileDetails(
+    userName: TextFieldValue,
+    onUserNameChange: (TextFieldValue) -> Unit
+) {
+    val context = LocalContext.current
+    var profileImageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Launcher for gallery
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent(),
+        onResult = { uri: Uri? ->
+            profileImageUri = uri
+            // Save URI to user profile
+        }
+    )
+
+    // Dialog to choose image from gallery
+    var showImageSelectionDialog by remember { mutableStateOf(false) }
+    if (showImageSelectionDialog) {
+        ShowImageSelectionDialog(
+            context = context,
+            galleryLauncher = galleryLauncher,
+            onDismiss = { showImageSelectionDialog = false }
+        )
+    }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Immagine del profilo
         Box(
             modifier = Modifier
                 .size(80.dp)
                 .background(MaterialTheme.colors.onBackground.copy(alpha = 0.2f))
+                .clickable {
+                    showImageSelectionDialog = true
+                }
         ) {
-            // Sostituire con l'immagine reale dell'utente
+            // Display profile image if available
+            profileImageUri?.let {
+                Image(
+                    painter = rememberAsyncImagePainter(it),
+                    contentDescription = null,
+                    modifier = Modifier.size(80.dp)
+                )
+            }
         }
         Spacer(modifier = Modifier.width(16.dp))
-        // Nome utente modificabile
         BasicTextField(
             value = userName,
             onValueChange = onUserNameChange,
@@ -198,6 +254,28 @@ fun ProfileDetails(userName: TextFieldValue, onUserNameChange: (TextFieldValue) 
                 .fillMaxWidth()
         )
     }
+}
+
+@Composable
+fun ShowImageSelectionDialog(
+    context: Context,
+    galleryLauncher: ActivityResultLauncher<String>,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = "Choose Image") },
+        buttons = {
+            Column {
+                Button(onClick = {
+                    galleryLauncher.launch("image/*")
+                    onDismiss()
+                }) {
+                    Text("Choose from Gallery")
+                }
+            }
+        }
+    )
 }
 
 @Composable
